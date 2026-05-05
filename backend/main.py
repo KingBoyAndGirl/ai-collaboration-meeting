@@ -8,6 +8,7 @@ from datetime import datetime
 from meeting import *
 from meeting.routers import scenes, meetings, intervention, outputs
 from meeting.websocket import manager
+from meeting.middleware import PerformanceMiddleware
 
 # 配置日志
 logging.basicConfig(
@@ -31,6 +32,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+# 添加中间件
+app.add_middleware(PerformanceMiddleware)
 
 # 注册路由
 app.include_router(scenes.router)
