@@ -1,4 +1,4 @@
-"""场景列表页面"""
+// 场景列表页面
 import React, { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, message } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'

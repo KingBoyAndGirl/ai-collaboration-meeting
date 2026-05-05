@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any
 from pathlib import Path
-from ..models import Meeting, MeetingStage
+from .models import Meeting, MeetingStage
 import yaml
 
 

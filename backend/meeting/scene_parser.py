@@ -1,3 +1,4 @@
+"""场景 YAML 解析器"""
 from typing import List, Dict
 import yaml
 from pathlib import Path
@@ -60,7 +61,7 @@ class SceneParser:
 
         # 检查阶段中的角色是否存在
         if 'roles' in config and 'stages' in config:
-            role_ids = {r.get('id') for r in config['roles'] if 'id' in r]
+            role_ids = {r.get('id') for r in config['roles'] if 'id' in r}
             for stage in config['stages']:
                 for role_id in stage.get('roles', []):
                     if role_id not in role_ids:

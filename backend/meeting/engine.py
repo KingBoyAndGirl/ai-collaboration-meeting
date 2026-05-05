@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
-from ..models import (
+from .models import (
     Meeting, MeetingStage, StageType, Message, MessageRole, Round,
     ConsensusMethod, Scene
 )

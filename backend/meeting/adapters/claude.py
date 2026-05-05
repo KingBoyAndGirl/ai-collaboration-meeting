@@ -2,7 +2,7 @@
 import os
 from typing import Dict, Any, List
 import httpx
-from ..base import BaseMeetingAgent
+from .base import BaseMeetingAgent
 
 
 class ClaudeAdapter(BaseMeetingAgent):

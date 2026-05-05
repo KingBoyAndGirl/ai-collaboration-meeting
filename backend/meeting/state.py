@@ -1,6 +1,6 @@
 """全局引擎存储"""
 from typing import Dict
-from ..engine import MeetingEngine
+from .engine import MeetingEngine
 
 # 会议 ID -> 引擎映射
 engines: Dict[str, MeetingEngine] = {}

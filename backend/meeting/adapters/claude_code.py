@@ -3,7 +3,7 @@ import os
 import json
 import asyncio
 from typing import Dict, Any, List
-from ..base import BaseMeetingAgent
+from .base import BaseMeetingAgent
 
 
 class ClaudeCodeAdapter(BaseMeetingAgent):

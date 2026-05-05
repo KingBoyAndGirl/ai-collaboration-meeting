@@ -1,7 +1,7 @@
 """代码生成器 - 使用 Claude Code 生成代码"""
 import asyncio
 from typing import Dict, Any, Optional
-from ..adapters.claude_code import ClaudeCodeAdapter
+from .adapters.claude_code import ClaudeCodeAdapter
 
 
 class CodeGenerator:

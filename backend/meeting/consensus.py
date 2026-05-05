@@ -1,7 +1,7 @@
 """共识检测算法"""
 import re
 from typing import Tuple, List, Optional
-from ..models import Message, ConsensusMethod
+from .models import Message, ConsensusMethod
 
 
 class ConsensusDetector:

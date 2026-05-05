@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """AI Meeting CLI 工具"""
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+
 import argparse
 import asyncio
-import httpx
 from meeting.scene_parser import SceneParser
 from meeting.engine import MeetingEngine
 from meeting.runner import MeetingRunner

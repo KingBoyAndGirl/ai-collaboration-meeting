@@ -2,8 +2,8 @@
 import uuid
 from datetime import datetime
 from typing import Dict, Any
-from ..models import Meeting, MeetingStage, Stage
-from ..output_generator import OutputGenerator
+from .models import Meeting, MeetingStage, Stage
+from .output_generator import OutputGenerator
 
 
 class OutputStageHandler:
