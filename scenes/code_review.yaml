@@ -1,0 +1,57 @@
+# 代码审查场景示例
+name: "代码审查会议"
+description: "多 Agent 协作进行代码审查"
+version: "1.0.0"
+
+variables:
+  language: "python"
+  focus: "security"
+
+roles:
+  - id: reviewer
+    name: "代码审查者"
+    description: "负责阅读和理解代码逻辑"
+    executor: "claude"
+    model: "claude-3-5-sonnet"
+    
+  - id: security
+    name: "安全专家"
+    description: "专注安全漏洞检测"
+    executor: "claude"
+    model: "claude-3-5-sonnet"
+    
+  - id: optimizer
+    name: "性能优化师"
+    description: "关注代码性能和效率"
+    executor: "openai"
+    model: "gpt-4"
+
+  - id: moderator
+    name: "主持人"
+    description: "协调讨论和达成共识"
+    executor: "hermes"
+
+stages:
+  - id: review
+    type: requirement
+    roles: [reviewer, security, optimizer]
+    moderator: moderator
+    max_rounds: 3
+    consensus: moderator
+    output_format: markdown
+    
+  - id: suggestions
+    type: design
+    roles: [reviewer, optimizer]
+    moderator: moderator
+    max_rounds: 2
+    consensus: keyword
+    output_format: markdown
+    
+  - id: output
+    type: output
+    roles: [reviewer]
+    moderator: moderator
+    max_rounds: 1
+    consensus: moderator
+    output_format: markdown
