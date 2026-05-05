@@ -17,6 +17,8 @@ from .scene_parser import SceneParser
 from .engine import MeetingEngine, MeetingStatus
 from .consensus import ConsensusDetector
 from .websocket import manager
+from .output_generator import OutputGenerator
+from .code_generator import CodeGenerator
 
 __all__ = [
     "StageType",
@@ -34,4 +36,6 @@ __all__ = [
     "MeetingEngine",
     "MeetingStatus",
     "ConsensusDetector",
+    "OutputGenerator",
+    "CodeGenerator",
 ]
