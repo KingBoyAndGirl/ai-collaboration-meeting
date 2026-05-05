@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 from meeting import *
-from meeting.routers import scenes, meetings
+from meeting.routers import scenes, meetings, intervention
 from meeting.websocket import manager
 
 # 配置日志
@@ -35,6 +35,7 @@ app = FastAPI(
 # 注册路由
 app.include_router(scenes.router)
 app.include_router(meetings.router)
+app.include_router(intervention.router)
 
 # 健康检查
 @app.get("/health")
