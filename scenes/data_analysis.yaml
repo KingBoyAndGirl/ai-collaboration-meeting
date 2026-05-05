@@ -1,0 +1,40 @@
+# 数据处理场景
+name: "数据分析会议"
+description: "数据分析和可视化设计"
+version: "1.0.0"
+
+roles:
+  - id: analyst
+    name: "数据分析师"
+    description: "分析数据趋势和模式"
+    executor: "openai"
+    model: "gpt-4"
+    
+  - id: visualizer
+    name: "可视化设计师"
+    description: "设计图表和仪表板"
+    executor: "claude"
+    
+  - id: moderator
+    name: "主持人"
+    description: "协调讨论"
+    executor: "hermes"
+
+stages:
+  - id: analysis
+    type: requirement
+    roles: [analyst]
+    moderator: moderator
+    max_rounds: 2
+    
+  - id: visualization
+    type: design
+    roles: [visualizer]
+    moderator: moderator
+    max_rounds: 1
+    
+  - id: output
+    type: output
+    roles: [analyst, visualizer]
+    moderator: moderator
+    max_rounds: 1

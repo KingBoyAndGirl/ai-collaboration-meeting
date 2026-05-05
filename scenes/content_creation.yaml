@@ -1,0 +1,50 @@
+# 内容创作场景
+name: "内容创作会议"
+description: "多 Agent 协作创作文章"
+version: "1.0.0"
+
+roles:
+  - id: writer
+    name: "作家"
+    description: "负责写作和构思"
+    executor: "claude"
+    model: "claude-3-5-sonnet"
+    
+  - id: editor
+    name: "编辑"
+    description: "优化文本结构和表达"
+    executor: "openai"
+    model: "gpt-4"
+    
+  - id: researcher
+    name: "研究员"
+    description: "提供资料和事实"
+    executor: "hermes"
+
+stages:
+  - id: outline
+    type: design
+    roles: [writer]
+    moderator: writer
+    max_rounds: 2
+    consensus: moderator
+    
+  - id: draft
+    type: requirement
+    roles: [writer, researcher]
+    moderator: writer
+    max_rounds: 3
+    consensus: keyword
+    
+  - id: review
+    type: review
+    roles: [editor]
+    moderator: editor
+    max_rounds: 1
+    consensus: moderator
+    
+  - id: output
+    type: output
+    roles: [writer]
+    moderator: writer
+    max_rounds: 1

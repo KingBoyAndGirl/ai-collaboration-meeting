@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 from meeting import *
-from meeting.routers import scenes, meetings, intervention, outputs
+from meeting.routers import scenes, meetings, intervention, outputs, run
 from meeting.websocket import manager
 from meeting.middleware import PerformanceMiddleware
 
@@ -41,6 +41,7 @@ app.include_router(scenes.router)
 app.include_router(meetings.router)
 app.include_router(intervention.router)
 app.include_router(outputs.router)
+app.include_router(run.router)
 
 # 健康检查
 @app.get("/health")
