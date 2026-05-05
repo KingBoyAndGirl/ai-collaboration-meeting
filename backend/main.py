@@ -7,6 +7,7 @@ from datetime import datetime
 
 from meeting import *
 from meeting.routers import scenes, meetings
+from meeting.websocket import manager
 
 # 配置日志
 logging.basicConfig(
@@ -55,13 +56,18 @@ async def verify_api_key(request: Request):
         raise HTTPException(status_code=401, detail="Invalid API Key")
     return True
 
-# WebSocket 端点（占位）
+# WebSocket 端点
 @app.websocket("/ws/meetings/{meeting_id}")
 async def websocket_endpoint(websocket, meeting_id: str):
     """WebSocket 连接"""
-    await websocket.accept()
-    await websocket.send_json({"type": "connected", "meeting_id": meeting_id})
-    await websocket.close()
+    await manager.connect(meeting_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            await manager.send_personal(websocket, {"echo": data})
+    except Exception as e:
+        manager.disconnect(meeting_id, websocket)
+        logger.info(f"WebSocket disconnected: {meeting_id}")
 
 # 主入口
 if __name__ == "__main__":
