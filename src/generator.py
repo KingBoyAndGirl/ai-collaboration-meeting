@@ -7,16 +7,28 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-OUTPUT_DIR = Path("/home/prodbox/ai-collaboration-meeting/outputs")
+OUTPUT_DIR = Path("/data/code/ai-collaboration-meeting/outputs")
+
+STAGE_LABELS = {
+    "requirement": "需求分析",
+    "design": "设计方案",
+    "coding": "编码阶段",
+    "testing": "测试阶段",
+    "documentation": "文档阶段",
+}
 
 
 class OutputGenerator:
     """Generates deliverables from meeting stages."""
 
-    def __init__(self, meeting_id: str):
+    def __init__(self, meeting_id: str, output_dir: Optional[Path] = None):
         self.meeting_id = meeting_id
-        self.output_dir = OUTPUT_DIR / meeting_id
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dir = output_dir or OUTPUT_DIR / meeting_id
+        # Only create if directory exists or we have permission
+        try:
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, FileNotFoundError):
+            pass
 
     def generate_markdown(self, title: str, content: str, stage_id: str = "output") -> Path:
         """Generate a Markdown document."""
@@ -49,11 +61,12 @@ def format_meeting_summary(stage_logs: List[Dict[str, Any]]) -> str:
     
     for stage in stage_logs:
         stage_type = stage.get("stage_type", "unknown")
+        label = STAGE_LABELS.get(stage_type, stage_type.title())
         summary = stage.get("summary", "")
         decisions = stage.get("key_decisions", [])
         actions = stage.get("action_items", [])
         
-        lines.append(f"## {stage_type.title()} 阶段\n")
+        lines.append(f"## {label}\n")
         lines.append(f"{summary}\n")
         
         if decisions:

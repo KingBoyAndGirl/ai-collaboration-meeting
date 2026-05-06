@@ -13,7 +13,7 @@ class StageLogEntry(BaseModel):
     stage_id: str
     stage_type: str  # requirement, design, review, decision, output
     meeting_id: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now())
     
     # Content
     summary: str
@@ -35,7 +35,7 @@ class AssistantMemoryEntry(BaseModel):
     type: str = "meeting_log"
     meeting_id: str
     stage_id: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now())
     content: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
@@ -46,5 +46,5 @@ class ReminderEntry(BaseModel):
     trigger_text: str
     extracted_item: str
     meeting_id: str
-    detected_at: datetime = Field(default_factory=datetime.utcnow)
+    detected_at: datetime = Field(default_factory=lambda: datetime.now())
     reminded: bool = False
