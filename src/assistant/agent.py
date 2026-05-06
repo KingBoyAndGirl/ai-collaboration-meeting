@@ -5,12 +5,11 @@ Uses native Hermes Agent memory system (MemoryManager + MemoryProvider).
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-# Deferred imports to avoid hard dependency on hermes-agent
-# Used in prodbox deployment where hermes-agent is installed
+from .models import StageLogEntry, AssistantMemoryEntry, ReminderEntry
+
 
 class AssistantAgent:
     """Stage assistant that logs meeting progress and manages memory.
@@ -24,46 +23,51 @@ class AssistantAgent:
     def __init__(self, meeting_id: str, memory_manager: Optional[Any] = None):
         self.meeting_id = meeting_id
         self.memory_manager = memory_manager
-        self.stage_logs: List[Dict[str, Any]] = []
+        self.stage_logs: List[StageLogEntry] = []
+        self.reminders: List[ReminderEntry] = []
     
-    def log_stage(self, stage_id: str, messages: List[Dict[str, Any]], 
-                  summary: str, consensus: bool = False) -> Dict[str, Any]:
+    def log_stage(self, stage_id: str, stage_type: str, messages: List[Dict[str, Any]],
+                  summary: str, consensus: bool = False,
+                  decisions: Optional[List[str]] = None,
+                  action_items: Optional[List[str]] = None) -> StageLogEntry:
         """Record stage completion and sync to memory."""
-        log_entry = {
-            "meeting_id": self.meeting_id,
-            "stage_id": stage_id,
-            "timestamp": datetime.utcnow().isoformat(),
-            "messages_count": len(messages),
-            "summary": summary,
-            "consensus_reached": consensus
-        }
-        self.stage_logs.append(log_entry)
+        entry = StageLogEntry(
+            stage_id=stage_id,
+            stage_type=stage_type,
+            meeting_id=self.meeting_id,
+            summary=summary,
+            consensus_reached=consensus,
+            messages_count=len(messages),
+            raw_messages=messages,
+            key_decisions=decisions or [],
+            action_items=action_items or []
+        )
+        self.stage_logs.append(entry)
         
         # Sync to Hermes memory
         if self.memory_manager:
-            content = json.dumps({
-                "type": "stage_log",
-                "stage": stage_id,
-                "summary": summary,
-                "consensus": consensus
-            })
-            # Use on_delegation hook for stage completion
             self.memory_manager.on_delegation(
                 task=f"Stage {stage_id} completed",
                 result=summary,
                 session_id=self.meeting_id
             )
         
-        return log_entry
+        return entry
     
-    def detect_reminder(self, content: str) -> Optional[str]:
+    def detect_reminder(self, content: str) -> Optional[ReminderEntry]:
         """Detect 'remember X' patterns for future reminders."""
         patterns = ["记得", "别忘了", "需要", "一定要", "别放过"]
         for p in patterns:
             if p in content:
-                # Extract the thing to remember
                 idx = content.find(p)
-                return content[idx:].split("。")[0]  # Take first sentence
+                item = content[idx:].split("。")[0]
+                reminder = ReminderEntry(
+                    trigger_text=content,
+                    extracted_item=item,
+                    meeting_id=self.meeting_id
+                )
+                self.reminders.append(reminder)
+                return reminder
         return None
     
     def get_context(self) -> str:
@@ -71,7 +75,7 @@ class AssistantAgent:
         if not self.memory_manager:
             return ""
         return self.memory_manager.prefetch_all(
-            f"meeting:{self.meeting_id}",
+            query=f"meeting:{self.meeting_id}",
             session_id=self.meeting_id
         )
     
