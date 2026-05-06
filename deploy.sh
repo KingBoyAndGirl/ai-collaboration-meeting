@@ -3,18 +3,37 @@
 
 set -e
 
-# Pull latest code
+echo "🚀 Deploying AI Meeting Platform..."
+
+# Go to project directory
 cd /home/prodbox/ai-collaboration-meeting
+
+# Pull latest code
 git pull origin master
 
-# Install deps
-npm install 2>/dev/null || true
-uv sync --extra dev 2>/dev/null || true
+# Install frontend dependencies
+npm install --silent
 
-# Restart services (if using systemd)
-# systemctl restart ai-meeting-frontend
-# systemctl restart ai-meeting-backend
+# Install backend dependencies
+cd backend
+uv sync --extra dev --quiet
 
-echo "✅ Deployment complete"
-echo "Frontend: npm run dev"
-echo "Backend: uv run uvicorn main:app --host 0.0.0.0 --port 18600"
+# Build frontend
+cd ..
+npm run build --silent
+
+# Restart services
+echo "🔄 Restarting services..."
+systemctl --user restart ai-meeting-backend 2>/dev/null || true
+systemctl --user restart ai-meeting-frontend 2>/dev/null || true
+
+# Show status
+echo "✅ Deployment complete!"
+echo ""
+echo "Services:"
+systemctl --user status ai-meeting-backend --no-pager -l 2>/dev/null | head -5 || echo "Backend not running"
+echo ""
+echo "Access URLs:"
+echo "  Frontend: http://localhost:18601"
+echo "  Backend:  http://localhost:18600"
+echo "  Health:   http://localhost:18600/health"

@@ -1,0 +1,16 @@
+[Unit]
+Description=AI Meeting Platform Backend
+After=network.target
+
+[Service]
+Type=simple
+User=prodbox
+WorkingDirectory=/home/prodbox/ai-collaboration-meeting/backend
+Environment="HOST=0.0.0.0"
+Environment="PORT=18600"
+ExecStart=/home/prodbox/ai-collaboration-meeting/backend/.venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -34,7 +34,8 @@ async def health_check():
 async def complete_stage(meeting_id: str, stage_id: str, summary: str):
     """Complete a stage and log to memory."""
     assistant = AssistantAgent(meeting_id=meeting_id)
-    # TODO: integrate with actual stage completion logic
+    # FUTURE: integrate with MeetingEngine for stage completion
+    # 当前仅记录到 Hermes 记忆
     return {"meeting_id": meeting_id, "stage_id": stage_id, "logged": True}
 
 @app.post("/api/meetings/{meeting_id}/generate")

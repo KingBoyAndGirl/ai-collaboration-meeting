@@ -13,10 +13,11 @@ _meetings = {}
 async def create_meeting(data: MeetingCreate):
     """创建会议"""
     meeting_id = str(uuid.uuid4())[:8]
-    meeting = Meeting(**data)
-    meeting.id = meeting_id
-    meeting.created_at = datetime.now()
-    meeting.updated_at = datetime.now()
+    meeting_data = data.model_dump()
+    meeting_data["id"] = meeting_id
+    meeting_data["created_at"] = datetime.now()
+    meeting_data["updated_at"] = datetime.now()
+    meeting = Meeting(**meeting_data)
     _meetings[meeting_id] = meeting
     return {"id": meeting_id, "status": "created"}
 
@@ -37,3 +38,48 @@ async def get_meeting(meeting_id: str):
     if meeting_id not in _meetings:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return _meetings[meeting_id]
+
+
+@router.post("/{meeting_id}/pause")
+async def pause_meeting(meeting_id: str):
+    """暂停会议"""
+    if meeting_id not in _meetings:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    _meetings[meeting_id].status = "paused"
+    return {"status": "paused"}
+
+
+@router.post("/{meeting_id}/resume")
+async def resume_meeting(meeting_id: str):
+    """恢复会议"""
+    if meeting_id not in _meetings:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    _meetings[meeting_id].status = "running"
+    return {"status": "running"}
+
+
+@router.post("/{meeting_id}/stop")
+async def stop_meeting(meeting_id: str):
+    """停止会议"""
+    if meeting_id not in _meetings:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    _meetings[meeting_id].status = "stopped"
+    return {"status": "stopped"}
+
+
+@router.post("/{meeting_id}/approve")
+async def approve_meeting(meeting_id: str):
+    """批准阶段"""
+    if meeting_id not in _meetings:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    _meetings[meeting_id].status = "running"
+    return {"status": "approved"}
+
+
+@router.post("/{meeting_id}/reject")
+async def reject_meeting(meeting_id: str):
+    """驳回阶段"""
+    if meeting_id not in _meetings:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    _meetings[meeting_id].status = "running"
+    return {"status": "rejected"}

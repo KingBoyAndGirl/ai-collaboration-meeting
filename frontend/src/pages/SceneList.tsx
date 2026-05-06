@@ -1,7 +1,8 @@
 // 场景列表页面
 import React, { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, message } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Table, Button, Modal, Form, Input, message, Popconfirm } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, CodeOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 interface Scene {
@@ -17,6 +18,7 @@ export default function SceneList() {
   const [modalVisible, setModalVisible] = useState(false)
   const [editingScene, setEditingScene] = useState<Scene | null>(null)
   const [form] = Form.useForm()
+  const navigate = useNavigate()
 
   const fetchScenes = async () => {
     setLoading(true)
@@ -32,11 +34,14 @@ export default function SceneList() {
 
   useEffect(() => {
     fetchScenes()
+    const interval = setInterval(fetchScenes, 10000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleCreate = () => {
     setEditingScene(null)
     form.resetFields()
+    form.setFieldsValue({ version: '1.0' })
     setModalVisible(true)
   }
 
@@ -46,16 +51,32 @@ export default function SceneList() {
     setModalVisible(true)
   }
 
+  const handleDelete = async (sceneId: string) => {
+    try {
+      await axios.delete(`/api/scenes/${sceneId}`)
+      message.success('删除成功')
+      fetchScenes()
+    } catch (error) {
+      message.error('删除失败')
+    }
+  }
+
+  const handleRun = (sceneName: string) => {
+    navigate(`/meetings`, { state: { sceneName } })
+  }
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
       if (editingScene) {
-        // 更新
         await axios.put(`/api/scenes/${editingScene.id}`, values)
         message.success('更新成功')
       } else {
-        // 创建
-        await axios.post('/api/scenes', values)
+        await axios.post('/api/scenes', {
+          ...values,
+          roles: [],
+          stages: []
+        })
         message.success('创建成功')
       }
       setModalVisible(false)
@@ -73,14 +94,28 @@ export default function SceneList() {
     {
       title: '操作',
       key: 'action',
-      render: (_, record: Scene) => (
+      render: (_: any, record: Scene) => (
         <>
+          <Button 
+            type="link" 
+            onClick={() => handleRun(record.name)}
+            title="运行会议"
+          >
+            <CodeOutlined /> 运行
+          </Button>
           <Button type="link" onClick={() => handleEdit(record)}>
             <EditOutlined /> 编辑
           </Button>
-          <Button type="link" danger onClick={() => {}}>
-            <DeleteOutlined /> 删除
-          </Button>
+          <Popconfirm
+            title="确认删除?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="是"
+            cancelText="否"
+          >
+            <Button type="link" danger>
+              <DeleteOutlined /> 删除
+            </Button>
+          </Popconfirm>
         </>
       )
     }
@@ -94,7 +129,12 @@ export default function SceneList() {
         </Button>
       </div>
       
-      <Table dataSource={scenes} columns={columns} loading={loading} />
+      <Table 
+        dataSource={scenes} 
+        columns={columns} 
+        loading={loading}
+        rowKey="id"
+      />
 
       <Modal
         title={editingScene ? '编辑场景' : '新建场景'}
@@ -103,17 +143,19 @@ export default function SceneList() {
         onCancel={() => setModalVisible(false)}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="id" label="ID" rules={[{ required: true }]}>
-            <Input disabled={!!editingScene} />
-          </Form.Item>
+          {!editingScene && (
+            <Form.Item name="id" label="ID" rules={[{ required: true, pattern: /^[a-z0-9-]+$/ }]}>
+              <Input placeholder="场景ID (小写字母和横杠)" />
+            </Form.Item>
+          )}
           <Form.Item name="name" label="名称" rules={[{ required: true }]}>
-            <Input />
+            <Input placeholder="场景名称" />
           </Form.Item>
           <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} placeholder="场景描述" />
           </Form.Item>
           <Form.Item name="version" label="版本" rules={[{ required: true }]}>
-            <Input defaultValue="1.0.0" />
+            <Input defaultValue="1.0" />
           </Form.Item>
         </Form>
       </Modal>

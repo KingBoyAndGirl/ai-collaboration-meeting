@@ -9,6 +9,8 @@ from .models import (
     ConsensusMethod, Scene
 )
 from .scene_parser import SceneParser
+from .executor_manager import get_executor_manager
+from .websocket import manager as ws_manager
 
 
 class MeetingStatus(str, Enum):
@@ -86,12 +88,84 @@ class MeetingEngine:
         meeting_stage = self._stage_instances[stage.id]
         meeting_stage.status = "running"
         
-        # TODO: 实现 Agent 发言逻辑
-        # 当前阶段占位，等待 Agent 适配层
+        # Agent 发言逻辑 (Phase 8)
+        executor_manager = get_executor_manager()
+        
+        # 获取阶段角色列表
+        stage_roles = stage.roles or [r.id for r in self.scene.roles]
+        
+        # 运行 Agent 轮次
+        round_messages = []
+        for role_id in stage_roles:
+            role = next((r for r in self.scene.roles if r.id == role_id), None)
+            if not role:
+                continue
+            
+            try:
+                # 构建提示词
+                prompt = f"当前阶段: {stage.name}\n请发表你的看法:"
+                
+                # 调用 Executor
+                response = await executor_manager.run_agent(
+                    role.executor,
+                    prompt,
+                    {"stage": stage.name, "meeting_id": self.meeting.id}
+                )
+                
+                msg = Message(
+                    id=str(uuid.uuid4())[:8],
+                    role=MessageRole.AGENT,
+                    role_id=role_id,
+                    content=response,
+                    timestamp=datetime.now()
+                )
+                round_messages.append(msg)
+                
+                # WebSocket 实时推送
+                if self.meeting:
+                    await ws_manager.push_message(
+                        self.meeting.id,
+                        "agent_message",
+                        msg.model_dump()
+                    )
+                
+            except Exception as e:
+                # 记录错误但继续
+                print(f"Agent {role_id} error: {e}")
+        
+        # 存储消息
+        if self.meeting:
+            self.meeting.messages.extend(round_messages)
+        
+        meeting_stage.messages = round_messages
+        
+        # 检查 consensus (简单关键词检测)
+        if self._check_consensus(round_messages):
+            meeting_stage.status = "approved"
+            return "approved"
         
         meeting_stage.status = "awaiting_approval"
         self.meeting.status = "awaiting_approval"
         return "awaiting_approval"
+    
+    def _check_consensus(self, messages: List[Message]) -> bool:
+        """检查是否达成共识"""
+        if not messages:
+            return False
+        
+        # 简单关键词检测
+        consensus_keywords = ["同意", "认可", "通过", "同意"]
+        
+        positive_count = 0
+        for msg in messages:
+            content = msg.content.lower()
+            for kw in consensus_keywords:
+                if kw in content:
+                    positive_count += 1
+                    break
+        
+        # 简单规则: 2/3 以上同意
+        return positive_count >= len(messages) * 2 // 3 + 1
 
     async def inject_feedback(self, feedback: str, role_id: str = "user") -> None:
         """注入用户反馈"""

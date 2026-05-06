@@ -71,6 +71,7 @@ class MeetingStage(BaseModel):
     stage_id: str
     status: str = "pending"
     rounds: List[Round] = []
+    messages: List[Message] = []
     consensus_reached: bool = False
     output: Optional[str] = None
     rejection_reason: Optional[str] = None
@@ -83,6 +84,7 @@ class Meeting(BaseModel):
     status: str = "created"
     current_stage: int = 0
     stages: List[MeetingStage] = []
+    messages: List[Message] = []
     variables: Dict[str, Any] = {}
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()

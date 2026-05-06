@@ -1,12 +1,14 @@
-"""会议监控页面"""
+/** 会议监控页面 */
 import React, { useState, useEffect } from 'react'
-import { Card, List, Tag, Button, Space, Timeline, message } from 'antd'
+import { Card, List, Tag, Button, Space, message, Typography } from 'antd'
 import { 
   PlayCircleOutlined, 
   PauseCircleOutlined, 
   CheckOutlined, 
-  CloseOutlined 
+  CloseOutlined,
+  ReloadOutlined
 } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 interface Meeting {
@@ -19,6 +21,7 @@ interface Meeting {
 export default function MeetingMonitor() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
   const fetchMeetings = async () => {
     setLoading(true)
@@ -40,30 +43,71 @@ export default function MeetingMonitor() {
 
   const handleAction = async (meetingId: string, action: string) => {
     try {
+      if (action === 'view') {
+        navigate(`/meetings/${meetingId}`)
+        return
+      }
       await axios.post(`/api/intervention/meetings/${meetingId}/${action}`)
       message.success(`${action} 成功`)
       fetchMeetings()
-    } catch (error) {
-      message.error(`${action} 失败`)
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || `${action} 失败`
+      message.error(detail)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'running': return 'green'
+      case 'completed': return 'blue'
+      case 'failed': return 'red'
+      case 'paused': return 'orange'
+      default: return 'default'
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'running': return '进行中'
+      case 'completed': return '已完成'
+      case 'failed': return '失败'
+      case 'paused': return '已暂停'
+      default: return status
     }
   }
 
   return (
     <div style={{ padding: 24 }}>
+      <Space style={{ marginBottom: 16 }}>
+        <Button onClick={fetchMeetings} icon={<ReloadOutlined />}>
+          刷新
+        </Button>
+        <Typography.Text type="secondary">
+          自动刷新: 5秒
+        </Typography.Text>
+      </Space>
+
       <List
         grid={{ gutter: 16, column: 3 }}
         dataSource={meetings}
         loading={loading}
+        locale={{ emptyText: '暂无会议' }}
         renderItem={meeting => (
           <List.Item>
             <Card 
               title={`会议 ${meeting.id}`}
-              extra={<Tag color={meeting.status === 'running' ? 'green' : 'blue'}>{meeting.status}</Tag>}
+              extra={<Tag color={getStatusColor(meeting.status)}>{getStatusText(meeting.status)}</Tag>}
             >
               <p>场景: {meeting.scene_name}</p>
-              <p>阶段: {meeting.current_stage}</p>
               
               <Space>
+                <Button 
+                  size="small" 
+                  onClick={() => handleAction(meeting.id, 'view')}
+                >
+                  查看详情
+                </Button>
+
                 {meeting.status === 'running' && (
                   <>
                     <Button 
@@ -79,16 +123,15 @@ export default function MeetingMonitor() {
                     >
                       <CloseOutlined /> 驳回
                     </Button>
+                    <Button 
+                      size="small" 
+                      onClick={() => handleAction(meeting.id, 'pause')}
+                    >
+                      <PauseCircleOutlined /> 暂停
+                    </Button>
                   </>
                 )}
-                {meeting.status !== 'paused' && (
-                  <Button 
-                    size="small" 
-                    onClick={() => handleAction(meeting.id, 'pause')}
-                  >
-                    <PauseCircleOutlined /> 暂停
-                  </Button>
-                )}
+
                 {meeting.status === 'paused' && (
                   <Button 
                     size="small" 

@@ -1,66 +1,100 @@
-"""会议详情页面 - 实时消息"""
+/** 会议详情页面 - 实时消息 */
 import React, { useEffect, useState } from 'react'
-import { Card, List, Tag, Button, Space, Input, message } from 'antd'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { Card, List, Tag, Button, Space, Input, message, Row, Col } from 'antd'
+import { useMeetingWebSocket } from '../hooks/useWebSocket'
+import ChatBubble from '../components/ChatBubble'
+import StageProgress from '../components/StageProgress'
+import MeetingControls from '../components/MeetingControls'
+import { meetingApi } from '../services/api'
 
 interface MeetingDetailProps {
   meetingId: string
 }
 
-export default function MeetingDetail({ meetingId }: MeetingDetailProps) {
-  const { messages, connected } = useWebSocket(meetingId)
-  const [feedback, setFeedback] = useState("")
+interface Stage {
+  id: string
+  type: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+}
 
-  const sendFeedback = async () => {
+interface Meeting {
+  id: string
+  status: string
+  stages: Stage[]
+  current_stage: number
+}
+
+export default function MeetingDetail({ meetingId }: MeetingDetailProps) {
+  const { messages, connected } = useMeetingWebSocket(meetingId)
+  const [meeting, setMeeting] = useState<Meeting | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const fetchMeeting = async () => {
+    setLoading(true)
     try {
-      await fetch(`/api/intervention/meetings/${meetingId}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: feedback })
-      })
-      message.success('反馈已发送')
-      setFeedback("")
+      const data = await meetingApi.get(meetingId)
+      setMeeting(data)
     } catch (error) {
-      message.error('发送失败')
+      message.error('加载会议失败')
+    } finally {
+      setLoading(false)
     }
   }
 
+  useEffect(() => {
+    fetchMeeting()
+    const interval = setInterval(fetchMeeting, 5000)
+    return () => clearInterval(interval)
+  }, [meetingId])
+
   return (
     <div style={{ padding: 24 }}>
-      <Card title={`会议 ${meetingId}`}>
-        <Space style={{ marginBottom: 16 }}>
-          <Tag color={connected ? 'green' : 'red'}>
-            {connected ? '已连接' : '未连接'}
-          </Tag>
-        </Space>
+      <Row gutter={24}>
+        {/* 左侧阶段进度 */}
+        <Col span={6}>
+          <Card title="会议阶段" bordered={false}>
+            {meeting && (
+              <StageProgress 
+                stages={meeting.stages} 
+                currentStageIndex={meeting.current_stage} 
+              />
+            )}
+          </Card>
+        </Col>
 
-        <List
-          dataSource={messages}
-          renderItem={item => (
-            <List.Item>
-              <Card size="small" style={{ width: '100%' }}>
-                <Tag color="blue">{item.data?.role_id || '系统'}</Tag>
-                <p>{item.data?.content}</p>
-              </Card>
-            </List.Item>
-          )}
-        />
+        {/* 右侧消息列表 */}
+        <Col span={18}>
+          <Card 
+            title={`会议 ${meetingId}`}
+            extra={
+              meeting && (
+                <MeetingControls 
+                  meetingId={meetingId}
+                  status={meeting.status}
+                  onUpdate={fetchMeeting}
+                />
+              )
+            }
+          >
+            <Space style={{ marginBottom: 16 }}>
+              <Tag color={connected ? 'green' : 'red'}>
+                {connected ? 'WebSocket 已连接' : 'WebSocket 未连接'}
+              </Tag>
+              <Tag color={meeting?.status === 'running' ? 'blue' : 'default'}>
+                {meeting?.status || '加载中...'}
+              </Tag>
+            </Space>
 
-        <div style={{ marginTop: 24 }}>
-          <Space>
-            <Input.TextArea
-              value={feedback}
-              onChange={e => setFeedback(e.target.value)}
-              placeholder="输入反馈..."
-              rows={2}
-              style={{ width: 300 }}
+            <List
+              dataSource={messages}
+              renderItem={msg => (
+                <ChatBubble message={msg.data} />
+              )}
+              locale={{ emptyText: '等待消息...' }}
             />
-            <Button onClick={sendFeedback} type="primary">
-              发送反馈
-            </Button>
-          </Space>
-        </div>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
     </div>
   )
 }

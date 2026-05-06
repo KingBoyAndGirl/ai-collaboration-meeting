@@ -8,7 +8,7 @@ export function useMeetingWebSocket(meetingId: string) {
   useEffect(() => {
     if (!meetingId) return
 
-    const ws = new WebSocket(`ws://localhost:18502/ws/meetings/${meetingId}`)
+    const ws = new WebSocket(`ws://localhost:18602/ws/meetings/${meetingId}`)
     
     ws.onopen = () => {
       setConnected(true)
