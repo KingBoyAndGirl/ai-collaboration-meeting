@@ -16,11 +16,11 @@ const styles = {
   message: { padding: '8px 0', borderBottom: '1px solid #e2e8f0' },
 }
 
-function useWebSocket(meetingId: string) {
+function useWebSocket(meetingId) {
   const [connected, setConnected] = useState(false)
-  const [messages, setMessages] = useState<any[]>([])
-  const [stage, setStage] = useState<string | null>(null)
-  const wsRef = React.useRef<WebSocket | null>(null)
+  const [messages, setMessages] = useState([])
+  const [stage, setStage] = useState(null)
+  const wsRef = React.useRef(null)
 
   useEffect(() => {
     if (!meetingId) return
@@ -62,7 +62,7 @@ function App() {
             <h2>欢迎使用</h2>
             <p>WebSocket状态: <span style={{...styles.status, ...(connected ? styles.connected : styles.disconnected)}}>{connected ? '已连接' : '未连接'}</span></p>
             <ul>
-              <li><a href="/api/health">API 健康检查</a></li>
+              <li><a href="/health">API 健康检查</a></li>
             </ul>
           </div>
         )}
@@ -70,7 +70,7 @@ function App() {
         {view === 'monitor' && (
           <div style={styles.card}>
             <h3>📊 会议监控 - 当前阶段: {stage || '等待中'}</h3>
-            <div style={styles.messages as any}>
+            <div style={styles.messages}>
               {messages.map((m, i) => (
                 <div key={i} style={styles.message}>
                   <strong>{m.type}:</strong> {JSON.stringify(m.data)}
@@ -93,4 +93,4 @@ function SceneEditor() {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
