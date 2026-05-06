@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from assistants.agent import AssistantAgent
+from assistant.agent import AssistantAgent
 from executors.hermes_executor import HermesExecutor
 
 app = FastAPI(
