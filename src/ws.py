@@ -12,7 +12,7 @@ router = APIRouter()
 active_connections: Dict[str, List[WebSocket]] = {}
 
 
-@router.websocket("/ws/meetings/{meeting_id}")
+@router.websocket("/ws/{meeting_id}")
 async def meeting_ws(websocket: WebSocket, meeting_id: str):
     """WebSocket endpoint for meeting real-time updates."""
     await websocket.accept()
