@@ -1,72 +1,45 @@
-# AI 协作会议平台
+# AI Collaboration Meeting Platform
 
-让人类当导演，AI当演员，通过会议协作完成任何任务。
+> 人类当导演，AI当演员
 
-## 功能特性
-
-- ✅ 多 Agent 协作会议
-- ✅ YAML 场景定义
-- ✅ 实时 WebSocket 通信
-- ✅ 用户介入/批准机制
-- ✅ 产出物生成 (Markdown/代码)
-
-## 快速开始
-
-### 后端
+## Quick Start
 
 ```bash
-cd backend
-uv sync
-uv run uvicorn main:app --reload --port 18502
-```
+# Prerequisites: uv, Node.js 20+
+git clone https://github.com/KingBoyAndGirl/ai-collaboration-meeting
+cd ai-collaboration-meeting
 
-### 前端
+# Backend (port 18600)
+uv run uvicorn main:app --host 0.0.0.0 --port 18600
 
-```bash
-cd frontend
+# Frontend (port 18601)
 npm install
 npm run dev
 ```
 
-访问 http://localhost:18501
+## Architecture
 
-## 场景 YAML 示例
-
-```yaml
-name: "代码审查"
-description: "AI 协作代码审查"
-version: "1.0.0"
-
-roles:
-  - id: reviewer
-    name: "审查者"
-    description: "阅读代码"
-    executor: "claude"
-    
-stages:
-  - id: review
-    type: requirement
-    roles: [reviewer]
-    moderator: reviewer
+```
+src/
+├── main.py          # FastAPI entry
+├── ws.py            # WebSocket routes
+├── generator.py     # Output generation
+└── assistant/
+    ├── models.py    # Pydantic models
+    ├── agent.py     # AssistantAgent
+    └── memory_adapter.py
 ```
 
-## API 端点
+## API Endpoints
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| /api/scenes | GET/POST | 场景管理 |
-| /api/meetings | GET/POST | 会议管理 |
-| /ws/meetings/{id} | WS | 实时通信 |
-| /api/intervention/meetings/{id}/approve | POST | 批准阶段 |
-| /api/intervention/meetings/{id}/reject | POST | 驳回阶段 |
+- `GET /api/health` - Health check
+- `WS /ws/{meeting_id}` - WebSocket connection
 
-## 支持的 Agent
+## Production
 
-- claude: Anthropic Claude
-- openai: OpenAI GPT
-- hermes: Hermes Agent
-- claude_code: Claude Code (ACP)
+- Frontend: https://ai-meeting.nasw.heiyu.space
+- Backend: https://ai-meeting.nasw.heiyu.space/api
 
-## 许可证
+## License
 
 MIT
