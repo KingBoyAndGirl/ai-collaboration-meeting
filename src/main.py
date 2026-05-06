@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from assistant.agent import AssistantAgent
 from executors.hermes_executor import HermesExecutor
+from ws import router as ws_router
 
 app = FastAPI(
     title="AI Collaboration Meeting Platform",
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include WebSocket routes
+app.include_router(ws_router)
 
 @app.get("/health")
 async def health_check():
