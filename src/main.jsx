@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import ReactDOM from 'react-dom/client'
 
 const styles = {
   container: { fontFamily: "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif", maxWidth: 900, margin: '0 auto', padding: 20 },
@@ -10,7 +11,7 @@ const styles = {
   subtitle: { margin: '8px 0 0', opacity: 0.9, fontSize: 14 }
 }
 
-export default function App() {
+function App() {
   const [view, setView] = useState('home')
 
   return (
@@ -60,3 +61,5 @@ function MeetingMonitor({ meetingId }) {
     </div>
   )
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
