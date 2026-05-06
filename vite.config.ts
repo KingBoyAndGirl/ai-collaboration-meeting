@@ -17,5 +17,24 @@ export default defineConfig({
         ws: true,
       }
     }
+  },
+  // 生产优化
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'antd-vendor': ['antd'],
+          'chart': ['echarts'],
+        }
+      }
+    }
+  },
+  preview: {
+    port: 18601,
+    host: '0.0.0.0'
   }
 })

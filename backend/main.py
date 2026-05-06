@@ -55,6 +55,17 @@ async def health_check():
         "version": "0.1.0"
     }
 
+# 监控指标
+@app.get("/metrics")
+async def metrics():
+    """Prometheus 风格指标"""
+    return {
+        "meetings_total": 0,
+        "active_meetings": 0,
+        "messages_total": 0,
+        "agents_online": len(get_executor_manager()._executors)
+    }
+
 # API Key 验证（单用户模式）
 API_KEY = os.getenv("API_KEY", "default-key")
 
