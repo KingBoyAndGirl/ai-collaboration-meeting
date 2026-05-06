@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from assistant.agent import AssistantAgent
 from executors.hermes_executor import HermesExecutor
 from ws import router as ws_router
+from generator import OutputGenerator, format_meeting_summary
 
 app = FastAPI(
     title="AI Collaboration Meeting Platform",
@@ -35,6 +36,14 @@ async def complete_stage(meeting_id: str, stage_id: str, summary: str):
     assistant = AssistantAgent(meeting_id=meeting_id)
     # TODO: integrate with actual stage completion logic
     return {"meeting_id": meeting_id, "stage_id": stage_id, "logged": True}
+
+@app.post("/api/meetings/{meeting_id}/generate")
+async def generate_output(meeting_id: str, stage_logs: list, title: str = "Meeting Output"):
+    """Generate deliverables from meeting stage logs."""
+    gen = OutputGenerator(meeting_id)
+    md_content = format_meeting_summary(stage_logs)
+    filepath = gen.generate_markdown(title, md_content, "final")
+    return {"path": str(filepath), "size": filepath.stat().st_size}
 
 if __name__ == "__main__":
     import uvicorn
