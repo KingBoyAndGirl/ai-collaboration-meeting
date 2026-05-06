@@ -23,15 +23,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'antd-vendor': ['antd'],
-          'chart': ['echarts'],
-        }
-      }
-    }
   },
   preview: {
     port: 18601,

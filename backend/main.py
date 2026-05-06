@@ -59,12 +59,27 @@ async def health_check():
 @app.get("/metrics")
 async def metrics():
     """Prometheus 风格指标"""
+    from meeting.mermaid_generator import MermaidGenerator
     return {
         "meetings_total": 0,
         "active_meetings": 0,
         "messages_total": 0,
         "agents_online": len(get_executor_manager()._executors)
     }
+
+# Mermaid 导出
+@app.get("/meetings/{meeting_id}/mermaid")
+async def export_mermaid(meeting_id: str):
+    """导出会议流程图"""
+    from meeting.models import Meeting
+    from meeting.mermaid_generator import MermaidGenerator
+    
+    meeting = Meeting.get(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    
+    mermaid = MermaidGenerator.meeting_to_mermaid(meeting.to_dict())
+    return {"mermaid": mermaid, "meeting_id": meeting_id}
 
 # API Key 验证（单用户模式）
 API_KEY = os.getenv("API_KEY", "default-key")

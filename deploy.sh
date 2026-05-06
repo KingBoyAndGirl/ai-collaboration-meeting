@@ -1,39 +1,25 @@
 #!/bin/bash
-# Deployment script for prodbox
+# Production deployment script for AI Meeting Platform
 
 set -e
 
-echo "🚀 Deploying AI Meeting Platform..."
+echo "🚀 Deploying AI Meeting Platform to prodbox..."
 
-# Go to project directory
-cd /home/prodbox/ai-collaboration-meeting
+# Backend
+echo "📦 Installing backend dependencies..."
+cd /data/code/ai-collaboration-meeting/backend
+uv sync
 
-# Pull latest code
-git pull origin master
+# Run tests
+echo "🧪 Running tests..."
+uv run pytest tests/ -v
 
-# Install frontend dependencies
-npm install --silent
+# Frontend build
+echo "🏗️ Building frontend..."
+cd /data/code/ai-collaboration-meeting
+npm run build
 
-# Install backend dependencies
-cd backend
-uv sync --extra dev --quiet
-
-# Build frontend
-cd ..
-npm run build --silent
-
-# Restart services
-echo "🔄 Restarting services..."
-systemctl --user restart ai-meeting-backend 2>/dev/null || true
-systemctl --user restart ai-meeting-frontend 2>/dev/null || true
-
-# Show status
-echo "✅ Deployment complete!"
-echo ""
-echo "Services:"
-systemctl --user status ai-meeting-backend --no-pager -l 2>/dev/null | head -5 || echo "Backend not running"
-echo ""
-echo "Access URLs:"
-echo "  Frontend: http://localhost:18601"
-echo "  Backend:  http://localhost:18600"
-echo "  Health:   http://localhost:18600/health"
+echo "✅ Deployment ready!"
+echo "Run on prodbox:"
+echo "  systemctl --user enable ai-meeting-backend"
+echo "  systemctl --user start ai-meeting-backend"

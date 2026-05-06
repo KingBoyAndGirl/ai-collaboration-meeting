@@ -1,94 +1,155 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
+import './index.css'
 
-const styles = {
-  container: { fontFamily: "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif", maxWidth: 900, margin: '0 auto', padding: 20 },
-  header: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '24px 16px', marginBottom: 24, borderRadius: 8 },
-  nav: { display: 'flex', gap: 12, marginTop: 16 },
-  button: { background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' },
-  card: { background: '#f8fafc', borderRadius: 8, padding: 20, marginBottom: 16, border: '1px solid #e2e8f0' },
-  title: { margin: 0, fontSize: 28 },
-  subtitle: { margin: '8px 0 0', opacity: 0.9, fontSize: 14 },
-  status: { fontSize: 12, padding: '4px 8px', borderRadius: 4, marginLeft: 8 },
-  connected: { background: '#10b981', color: 'white' },
-  disconnected: { background: '#ef4444', color: 'white' },
-  messages: { maxHeight: 300, overflowY: 'auto', fontSize: 14 },
-  message: { padding: '8px 0', borderBottom: '1px solid #e2e8f0' },
-}
-
-function useWebSocket(meetingId) {
-  const [connected, setConnected] = useState(false)
-  const [messages, setMessages] = useState([])
-  const [stage, setStage] = useState(null)
-  const wsRef = React.useRef(null)
-
-  useEffect(() => {
-    if (!meetingId) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/${meetingId}`)
-    wsRef.current = ws
-    ws.onopen = () => setConnected(true)
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data)
-      setMessages(prev => [...prev, data])
-      if (data.type === 'stage_update') setStage(data.data?.stage_id)
-    }
-    ws.onclose = () => setConnected(false)
-    return () => ws.close()
-  }, [meetingId])
-
-  return { connected, messages, stage }
-}
-
-function App() {
-  const [view, setView] = useState('home')
-  const { connected, messages, stage } = useWebSocket('demo-001')
+// 导航组件
+function Navigation({ currentView, onViewChange }) {
+  const navItems = [
+    { id: 'home', label: '首页', icon: '🏠' },
+    { id: 'scenes', label: '场景管理', icon: '📋' },
+    { id: 'meetings', label: '会议大厅', icon: '🎤' },
+    { id: 'monitor', label: '会议监控', icon: '📊' },
+  ]
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>🤖 AI 协作会议平台</h1>
-        <p style={styles.subtitle}>人类当导演，AI当演员</p>
-        <nav style={styles.nav}>
-          <button style={styles.button} onClick={() => setView('home')}>首页</button>
-          <button style={styles.button} onClick={() => setView('editor')}>场景编辑</button>
-          <button style={styles.button} onClick={() => setView('monitor')}>会议监控</button>
-        </nav>
-      </header>
+    <nav className="flex space-x-2 mb-6">
+      {navItems.map(item => (
+        <button
+          key={item.id}
+          onClick={() => onViewChange(item.id)}
+          className={`px-4 py-2 rounded-lg font-medium transition ${
+            currentView === item.id
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <span className="mr-2">{item.icon}</span>
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
 
-      <main>
-        {view === 'home' && (
-          <div style={styles.card}>
-            <h2>欢迎使用</h2>
-            <p>WebSocket状态: <span style={{...styles.status, ...(connected ? styles.connected : styles.disconnected)}}>{connected ? '已连接' : '未连接'}</span></p>
-            <ul>
-              <li><a href="/health">API 健康检查</a></li>
-            </ul>
+// 场景列表页
+function SceneList({ onSceneSelect }) {
+  const [scenes, setScenes] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // 模拟数据
+    setTimeout(() => {
+      setScenes([
+        { id: 'code-dev', name: '代码开发会议', desc: '多角色协作完成代码开发', updated: '2小时前' },
+        { id: 'content', name: '内容创作会议', desc: '创作优质内容', updated: '昨天' },
+        { id: 'business', name: '商业分析会议', desc: '市场分析和决策', updated: '3天前' },
+      ])
+      setLoading(false)
+    }, 500)
+  }, [])
+
+  if (loading) {
+    return <div className="text-center py-12">加载中...</div>
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">场景管理</h2>
+        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          + 新建场景
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {scenes.map(scene => (
+          <div 
+            key={scene.id}
+            onClick={() => onSceneSelect(scene.id)}
+            className="border rounded-xl p-6 hover:shadow-lg cursor-pointer transition"
+          >
+            <h3 className="text-lg font-semibold mb-2">{scene.name}</h3>
+            <p className="text-gray-600 text-sm mb-4">{scene.desc}</p>
+            <div className="text-xs text-gray-500">{scene.updated}</div>
           </div>
-        )}
-        {view === 'editor' && <SceneEditor />}
-        {view === 'monitor' && (
-          <div style={styles.card}>
-            <h3>📊 会议监控 - 当前阶段: {stage || '等待中'}</h3>
-            <div style={styles.messages}>
-              {messages.map((m, i) => (
-                <div key={i} style={styles.message}>
-                  <strong>{m.type}:</strong> {JSON.stringify(m.data)}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
+        ))}
+      </div>
     </div>
   )
 }
 
-function SceneEditor() {
+// 会议大厅
+function MeetingHall() {
+  const [meetings, setMeetings] = useState([])
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
   return (
-    <div style={styles.card}>
-      <h3>📝 场景编辑器</h3>
-      <p>开发中... 支持 YAML 配置</p>
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">会议大厅</h2>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+        >
+          开始新会议
+        </button>
+      </div>
+
+      <div className="text-center py-12 text-gray-500">
+        <p>暂无会议，点击"开始新会议"创建</p>
+      </div>
+    </div>
+  )
+}
+
+// 首页
+function Home() {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">欢迎使用 AI 协作会议平台</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="border rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-2">🚀 快速开始</h3>
+          <p className="text-gray-600 mb-4">从预置场景开始您的 AI 协作之旅</p>
+          <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg">
+            选择场景
+          </button>
+        </div>
+        <div className="border rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-2">📊 最近活动</h3>
+          <p className="text-gray-600">暂无活动记录</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 主应用
+function App() {
+  const [view, setView] = useState('home')
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">🤖 AI 协作会议平台</h1>
+          <p className="text-gray-600 text-sm">人类当导演，AI当演员</p>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-6">
+        <Navigation currentView={view} onViewChange={setView} />
+        
+        {view === 'home' && <Home />}
+        {view === 'scenes' && <SceneList onSceneSelect={(id) => console.log('选择场景:', id)} />}
+        {view === 'meetings' && <MeetingHall />}
+        {view === 'monitor' && (
+          <div className="border rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-4">📊 会议监控</h3>
+            <p className="text-gray-600">请选择会议或前往会议大厅</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }

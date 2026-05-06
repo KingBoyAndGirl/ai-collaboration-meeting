@@ -130,6 +130,9 @@ class ExecutorManager:
         
         claude = ClaudeExecutor("claude", "claude-sonnet-4")
         self.register_executor(claude)
+        
+        openai = OpenAIExecutor("openai", "gpt-4")
+        self.register_executor(openai)
     
     def register_executor(self, executor: BaseExecutor) -> None:
         """注册 executor"""
