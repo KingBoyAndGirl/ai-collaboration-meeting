@@ -187,10 +187,10 @@ function SceneEditor({ scene, onSave, onCancel }) {
         </div>
 
         <div className="flex justify-end gap-4 mt-8">
-          <button className="glass-btn" onClick={onCancel}>取消</button>
+          <button className="glass-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(); }}>取消</button>
           <button
             className="gradient-btn"
-            onClick={() => onSave({ ...scene, name, description, agents })}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSave({ ...scene, name, description, agents }); }}
           >
             保存场景
           </button>
@@ -597,7 +597,10 @@ function App() {
         <SceneEditor
           scene={currentScene}
           onSave={handleSaveScene}
-          onCancel={() => setShowSceneEditor(false)}
+          onCancel={() => {
+            console.log('Cancel clicked')
+            setShowSceneEditor(false)
+          }}
         />
       )}
 
@@ -606,6 +609,7 @@ function App() {
         <MeetingHall
           scene={currentScene}
           onComplete={() => {
+            console.log('Complete clicked')
             setShowMeeting(false)
             showNotification('会议已完成')
           }}
