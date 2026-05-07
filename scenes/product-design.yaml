@@ -1,0 +1,77 @@
+# 产品设计场景
+name: "产品设计"
+description: "多角色协作完成产品设计，从需求分析到原型设计"
+version: "1.0"
+
+# 变量定义
+variables:
+  product_name: "我的产品"
+  target_users: "目标用户"
+  tech_stack: "技术栈"
+
+# 角色定义
+roles:
+  - id: product_manager
+    name: "产品经理"
+    description: "负责需求分析、用户研究和功能定义"
+    executor: "hermes"
+    model: "auto-free"
+
+  - id: designer
+    name: "产品设计师"
+    description: "负责交互设计、UI设计和用户体验优化"
+    executor: "claude_code"
+    model: "auto-free"
+
+  - id: tech_lead
+    name: "技术负责人"
+    description: "负责技术可行性评估和架构设计"
+    executor: "hermes"
+    model: "auto-free"
+
+  - id: reviewer
+    name: "评审员"
+    description: "负责方案评审和质量把控"
+    executor: "claude_code"
+    model: "auto-free"
+
+# 阶段流程
+stages:
+  - id: requirement
+    type: requirement
+    roles: [product_manager]
+    moderator: product_manager
+    max_rounds: 3
+    consensus: keyword
+    output_format: markdown
+
+  - id: design
+    type: design
+    roles: [product_manager, designer]
+    moderator: designer
+    max_rounds: 5
+    consensus: moderator
+    output_format: markdown
+
+  - id: tech_review
+    type: review
+    roles: [tech_lead, designer]
+    moderator: tech_lead
+    max_rounds: 3
+    consensus: vote
+    output_format: markdown
+
+  - id: final_review
+    type: review
+    roles: [product_manager, designer, tech_lead, reviewer]
+    moderator: reviewer
+    max_rounds: 3
+    consensus: vote
+    output_format: markdown
+
+  - id: output
+    type: output
+    roles: [designer]
+    moderator: product_manager
+    max_rounds: 1
+    output_format: markdown

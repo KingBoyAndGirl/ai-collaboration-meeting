@@ -1,0 +1,69 @@
+# 代码开发场景
+name: "代码开发"
+description: "多角色协作完成代码开发，从需求到实现"
+version: "1.0"
+
+# 变量定义
+variables:
+  project_name: "我的项目"
+  tech_stack: "Python + FastAPI + React"
+  requirements: "功能需求描述"
+
+# 角色定义
+roles:
+  - id: product_manager
+    name: "产品经理"
+    description: "负责需求分析和功能定义"
+    executor: "hermes"
+    model: "auto-free"
+
+  - id: architect
+    name: "架构师"
+    description: "负责技术架构设计"
+    executor: "claude_code"
+    model: "auto-free"
+
+  - id: developer
+    name: "开发者"
+    description: "负责代码实现"
+    executor: "claude_code"
+    model: "auto-free"
+
+  - id: reviewer
+    name: "代码审查员"
+    description: "负责代码质量审查"
+    executor: "hermes"
+    model: "auto-free"
+
+# 阶段流程
+stages:
+  - id: requirement
+    type: requirement
+    roles: [product_manager]
+    moderator: product_manager
+    max_rounds: 3
+    consensus: keyword
+    output_format: markdown
+
+  - id: design
+    type: design
+    roles: [architect, product_manager]
+    moderator: architect
+    max_rounds: 5
+    consensus: moderator
+    output_format: markdown
+
+  - id: implementation
+    type: output
+    roles: [developer]
+    moderator: developer
+    max_rounds: 5
+    output_format: code
+
+  - id: review
+    type: review
+    roles: [reviewer, architect, developer]
+    moderator: reviewer
+    max_rounds: 3
+    consensus: vote
+    output_format: markdown
