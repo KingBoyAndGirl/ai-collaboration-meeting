@@ -1,18 +1,17 @@
-"""Hermes 适配器"""
+"""Hermes 适配器 - 使用 hermes chat CLI"""
 import os
+import asyncio
 from typing import Dict, Any, List
-import httpx
 from .base import BaseMeetingAgent
 
 
 class HermesAdapter(BaseMeetingAgent):
-    """Hermes Agent 适配器"""
+    """Hermes Agent 适配器 - 通过 hermes chat CLI 调用"""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.api_key = config.get('api_key') or os.getenv('HERMES_API_KEY')
-        self.base_url = config.get('base_url', 'http://localhost:8642')  # Hermes Gateway 端口
-        self.model = config.get('model', 'default')
+        self.hermes_path = config.get('hermes_path', 'hermes')
+        self.model = config.get('model', 'auto-free')
 
     async def speak(
         self,
@@ -24,36 +23,37 @@ class HermesAdapter(BaseMeetingAgent):
         """调用 Hermes 发言"""
         prompt = self.build_prompt(role_prompt, instruction, context, variables)
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "content-type": "application/json"
-        }
-        
-        payload = {
-            "model": self.model if self.model != "default" else None,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": self.max_output_tokens
-        }
-        
-        # 过滤 None 值
-        payload = {k: v for k, v in payload.items() if v is not None}
-        
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/v1/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
+        try:
+            cmd = [
+                self.hermes_path, "chat",
+                "-q", prompt,
+                "-m", self.model,
+                "-Q"  # quiet mode
+            ]
             
-        return self.truncate_output(data['choices'][0]['message']['content'])
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=self.timeout
+            )
+            
+            if proc.returncode == 0:
+                return self.truncate_output(stdout.decode().strip())
+            else:
+                error_msg = stderr.decode().strip()[:200]
+                return f"[Hermes Error] {error_msg}"
+                
+        except asyncio.TimeoutError:
+            return "[Hermes] 调用超时"
+        except Exception as e:
+            return f"[Hermes Error] {str(e)[:200]}"
 
-    async def summarize(
-        self,
-        messages: List[Dict],
-        instruction: str
-    ) -> str:
+    async def summarize(self, messages: List[Dict], instruction: str) -> str:
         """总结讨论"""
         msg_text = "\n".join(f"{m.get('role', 'user')}: {m.get('content')}" for m in messages)
         
@@ -65,32 +65,31 @@ class HermesAdapter(BaseMeetingAgent):
 
 请提供简洁的总结（Markdown 格式）："""
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "content-type": "application/json"
-        }
-        
-        payload = {
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 1000
-        }
-        
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/v1/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
+        try:
+            cmd = [
+                self.hermes_path, "chat",
+                "-q", prompt,
+                "-m", self.model,
+                "-Q"
+            ]
             
-        return data['choices'][0]['message']['content']
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, _ = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=self.timeout
+            )
+            
+            return stdout.decode().strip()
+            
+        except Exception as e:
+            return f"[Hermes 总结错误] {str(e)[:200]}"
 
-    async def judge_consensus(
-        self,
-        messages: List[Dict],
-        criteria: str
-    ) -> tuple[bool, str]:
+    async def judge_consensus(self, messages: List[Dict], criteria: str) -> tuple[bool, str]:
         """判断共识"""
         msg_text = "\n".join(f"{m.get('role', 'user')}: {m.get('content')}" for m in messages)
         
@@ -105,26 +104,29 @@ class HermesAdapter(BaseMeetingAgent):
 1. 是否达成共识 (是/否)
 2. 简短理由"""
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "content-type": "application/json"
-        }
-        
-        payload = {
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 500
-        }
-        
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/v1/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
-            data = response.json()
+        try:
+            cmd = [
+                self.hermes_path, "chat",
+                "-q", prompt,
+                "-m", self.model,
+                "-Q"
+            ]
             
-        result = data['choices'][0]['message']['content']
-        is_consensus = "是" in result[:10]
-        
-        return is_consensus, result
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, _ = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=self.timeout
+            )
+            
+            response = stdout.decode().strip()
+            is_consensus = "是" in response[:20]
+            
+            return is_consensus, response
+            
+        except Exception as e:
+            return False, f"[Hermes 判断错误] {str(e)[:200]}"
