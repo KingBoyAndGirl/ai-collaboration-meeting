@@ -93,6 +93,7 @@ function SceneCard({ scene, onStart, onEdit }) {
 function SceneEditor({ scene, onSave, onCancel }) {
   const [name, setName] = useState(scene?.name || '')
   const [description, setDescription] = useState(scene?.description || '')
+  const [icon, setIcon] = useState(scene?.icon || '💡')
   const [agents, setAgents] = useState(scene?.agents || [
     { role: '产品经理', model: 'claude-opus-4', prompt: '负责需求分析和功能定义' },
     { role: '架构师', model: 'claude-opus-4', prompt: '负责技术架构设计' },
@@ -137,6 +138,24 @@ function SceneEditor({ scene, onSave, onCancel }) {
               className="dark-input min-h-[100px] resize-none"
               placeholder="描述这个场景的目的和流程"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-2">场景图标</label>
+            <div className="flex flex-wrap gap-2">
+              {['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼', '🔬', '📚', '💻', '✍️', '📈', '🤖', '🧠', '💡', '🔐', '📱'].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => setIcon(emoji)}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
+                    icon === emoji ? 'bg-purple-500/50 ring-2 ring-purple-400' : 'bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -202,7 +221,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
           <button
             type="button"
             className="gradient-btn"
-            onClick={() => onSave({ ...scene, name, description, agents })}
+            onClick={() => onSave({ ...scene, name, description, icon, agents })}
           >
             保存场景
           </button>
@@ -474,7 +493,10 @@ function App() {
     if (sceneData.id) {
       setScenes(prev => prev.map(s => s.id === sceneData.id ? sceneData : s))
     } else {
-      setScenes(prev => [...prev, { ...sceneData, id: Date.now() }])
+      // 为新场景添加默认图标
+      const defaultIcons = ['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼', '🔬', '📚']
+      const icon = sceneData.icon || defaultIcons[Math.floor(Math.random() * defaultIcons.length)]
+      setScenes(prev => [...prev, { ...sceneData, icon, id: Date.now() }])
     }
     setShowSceneEditor(false)
     showNotification('场景已保存')
