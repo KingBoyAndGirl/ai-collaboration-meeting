@@ -185,18 +185,28 @@ function SceneEditor({ scene, onSave, onCancel }) {
                       placeholder="角色名称"
                     />
                     <select
-                      value={agent.model}
+                      value={agent.executor || agent.model}
                       onChange={e => {
                         const newAgents = [...agents]
-                        newAgents[i].model = e.target.value
+                        newAgents[i].executor = e.target.value
+                        newAgents[i].model = e.target.value  // 兼容旧数据
                         setAgents(newAgents)
                       }}
                       className="dark-input"
                     >
-                      <option value="claude-opus-4">Claude Opus</option>
-                      <option value="claude-sonnet-4">Claude Sonnet</option>
-                      <option value="gpt-4o">GPT-4o</option>
-                      <option value="gpt-4o-mini">GPT-4o Mini</option>
+                      <optgroup label="Hermes Agent">
+                        <option value="hermes">🤖 Hermes Agent (本地)</option>
+                      </optgroup>
+                      <optgroup label="Claude 系列">
+                        <option value="claude_code">💻 Claude Code (AxonHub)</option>
+                        <option value="claude-opus-4">Claude Opus 4</option>
+                        <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                      </optgroup>
+                      <optgroup label="OpenAI 系列">
+                        <option value="openai">🔌 OpenAI (AxonHub)</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                      </optgroup>
                     </select>
                   </div>
                   <input
