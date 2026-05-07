@@ -73,7 +73,7 @@ function StatCard({ icon, label, value, trend }) {
       <div className="flex items-end justify-between">
         <div className="text-3xl font-bold text-gray-800">{count}</div>
         <div className="text-emerald-600 text-sm font-medium flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
-          <span>↑</span> {trend}%
+          <span>↑</span> 环比{trend}%
         </div>
       </div>
     </div>
