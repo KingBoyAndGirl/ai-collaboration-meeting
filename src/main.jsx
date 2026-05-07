@@ -1,32 +1,70 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 
+// 动画延迟
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+// 通知组件
+function Notification({ message, type, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-fadeIn">
+      <div className={`glass-card p-4 flex items-center gap-3 ${
+        type === 'success' ? 'border-emerald-300' : 'border-blue-300'
+      }`}>
+        <span className="text-2xl">{type === 'success' ? '✓' : 'ℹ'}</span>
+        <span className="font-medium">{message}</span>
+      </div>
+    </div>
+  )
+}
+
+// 加载动画
+function LoadingDots() {
+  return (
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    </div>
+  )
+}
+
 // 导航组件
-function Navigation({ currentView, onViewChange }) {
+function Navigation({ currentView, onViewChange, loading }) {
   const navItems = [
-    { id: 'home', label: '首页', icon: '🏠', desc: '概览与统计' },
-    { id: 'scenes', label: '场景', icon: '📋', desc: '管理协作场景' },
-    { id: 'meetings', label: '会议', icon: '🎤', desc: '启动和管理' },
-    { id: 'monitor', label: '监控', icon: '📊', desc: '实时监控' },
+    { id: 'home', label: '首页', icon: '🏠', emoji: '✨' },
+    { id: 'scenes', label: '场景', icon: '📋', emoji: '🎯' },
+    { id: 'meetings', label: '会议', icon: '🎤', emoji: '🚀' },
+    { id: 'monitor', label: '监控', icon: '📊', emoji: '📈' },
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-3 mb-8">
-      {navItems.map((item, index) => (
+    <div className="glass mb-6 p-2 flex gap-2">
+      {navItems.map((item) => (
         <button
           key={item.id}
           onClick={() => onViewChange(item.id)}
-          className={`card p-4 text-left transition-all animate-fadeIn ${
+          disabled={loading}
+          className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
             currentView === item.id
-              ? 'ring-2 ring-[var(--primary)] shadow-md'
-              : 'hover:shadow-md'
+              ? 'bg-white text-[var(--primary)] shadow-lg transform scale-105'
+              : 'text-white/90 hover:bg-white/20'
           }`}
-          style={{ animationDelay: `${index * 0.1}s` }}
         >
-          <div className="text-2xl mb-2">{item.icon}</div>
-          <div className="font-semibold text-sm">{item.label}</div>
-          <div className="text-xs text-[var(--muted-foreground)] mt-1">{item.desc}</div>
+          {loading ? (
+            <LoadingDots />
+          ) : (
+            <>
+              <span className="text-xl">{currentView === item.id ? item.emoji : item.icon}</span>
+              <span>{item.label}</span>
+            </>
+          )}
         </button>
       ))}
     </div>
@@ -35,116 +73,87 @@ function Navigation({ currentView, onViewChange }) {
 
 // 统计卡片
 function StatCard({ icon, label, value, trend, color }) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setCount(value), 300)
+    return () => clearTimeout(timer)
+  }, [value])
+
   return (
-    <div className="card p-5">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-2xl">{icon}</span>
         {trend && (
           <span className={`text-xs px-2 py-1 rounded-full ${
-            trend > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            trend > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
           }`}>
             {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
           </span>
         )}
       </div>
-      <div className="text-2xl font-bold mb-1">{value}</div>
-      <div className="text-sm text-[var(--muted-foreground)]">{label}</div>
+      <div className="text-2xl font-bold mb-1">{count}</div>
+      <div className="text-sm text-gray-500">{label}</div>
     </div>
   )
 }
 
 // 首页
-function Home() {
+function Home({ onAction }) {
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn">
       {/* 欢迎区域 */}
-      <div className="gradient-primary rounded-2xl p-8 text-white">
+      <div className="glass p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">欢迎回来 👋</h1>
         <p className="text-white/90 mb-6 max-w-md">
-          AI 协作会议平台 - 让人类当导演，AI当演员，通过会议协作完成任何任务
+          让人类当导演，AI当演员，通过会议协作完成任何任务
         </p>
         <div className="flex gap-3">
-          <button className="bg-white text-[var(--primary)] px-6 py-2.5 rounded-lg font-medium hover:shadow-lg transition">
+          <button 
+            className="btn-glass"
+            onClick={() => onAction('new-meeting')}
+          >
             开始新会议
           </button>
-          <button className="bg-white/20 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-white/30 transition">
+          <button 
+            className="bg-white/20 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-white/30 transition"
+            onClick={() => onAction('docs')}
+          >
             查看文档
           </button>
         </div>
       </div>
 
-      {/* 统计卡片 */}
+      {/* 统计 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon="📋" label="场景总数" value="12" trend={8} />
-        <StatCard icon="🎤" label="会议次数" value="48" trend={12} />
-        <StatCard icon="💬" label="消息总数" value="1,234" trend={23} />
-        <StatCard icon="🤖" label="Agent 调用" value="3,456" trend={15} />
+        <StatCard icon="📋" label="场景总数" value={12} trend={8} />
+        <StatCard icon="🎤" label="会议次数" value={48} trend={12} />
+        <StatCard icon="💬" label="消息总数" value={1234} trend={23} />
+        <StatCard icon="🤖" label="Agent 调用" value={3456} trend={15} />
       </div>
 
       {/* 最近场景 */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">最近使用的场景</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">最近使用的场景</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { id: 1, name: '代码开发', desc: '多角色协作完成代码开发', emoji: '💻' },
-            { id: 2, name: '内容创作', desc: '创作优质内容', emoji: '✍️' },
-            { id: 3, name: '商业分析', desc: '市场分析和决策', emoji: '📊' },
-          ].map((scene, index) => (
-            <div key={scene.id} className="card p-5 animate-fadeIn" style={{ animationDelay: `${index * 0.15}s` }}>
-              <div className="text-2xl mb-3">{scene.emoji}</div>
+            { id: 1, name: '代码开发', emoji: '💻', desc: '多角色协作完成代码开发' },
+            { id: 2, name: '内容创作', emoji: '✍️', desc: '创作优质内容' },
+            { id: 3, name: '商业分析', emoji: '📊', desc: '市场分析和决策' },
+          ].map(scene => (
+            <div 
+              key={scene.id} 
+              className="glass-card p-5 cursor-pointer"
+              onClick={() => onAction('start-scene', scene.id)}
+            >
+              <div className="text-3xl mb-3">{scene.emoji}</div>
               <h3 className="font-semibold mb-1">{scene.name}</h3>
-              <p className="text-sm text-[var(--muted-foreground)]">{scene.desc}</p>
-              <button className="mt-4 text-sm text-[var(--primary)] font-medium hover:underline">
+              <p className="text-sm text-gray-500">{scene.desc}</p>
+              <button className="mt-4 text-sm text-[var(--primary)] font-medium">
                 开始会议 →
               </button>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 快速开始 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card p-6">
-          <h3 className="font-semibold mb-3">🚀 快速开始</h3>
-          <ul className="space-y-3 text-sm text-[var(--muted-foreground)]">
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">1.</span>
-              <span>选择一个预置场景或创建自定义场景</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">2.</span>
-              <span>配置角色和 Agent</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">3.</span>
-              <span>启动会议，AI 开始协作讨论</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">4.</span>
-              <span>查看产出物并下载</span>
-            </li>
-          </ul>
-        </div>
-        <div className="card p-6">
-          <h3 className="font-semibold mb-3">💡 使用提示</h3>
-          <ul className="space-y-3 text-sm text-[var(--muted-foreground)]">
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">•</span>
-              <span>可以随时介入 AI 讨论，提供反馈</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">•</span>
-              <span>支持暂停和恢复会议</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">•</span>
-              <span>可以导出 Markdown 格式的产出物</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2 mt-1">•</span>
-              <span>支持多 Agent 并行讨论</span>
-            </li>
-          </ul>
         </div>
       </div>
     </div>
@@ -152,44 +161,45 @@ function Home() {
 }
 
 // 场景列表
-function SceneList() {
-  const [scenes] = useState([
-    { id: 1, name: '代码开发', desc: '多角色协作完成代码开发', emoji: '💻', updated: '2小时前' },
-    { id: 2, name: '内容创作', desc: '创作优质内容', emoji: '✍️', updated: '1天前' },
-    { id: 3, name: '商业分析', desc: '市场分析和决策', emoji: '📊', updated: '3天前' },
-    { id: 4, name: '产品设计', desc: '产品需求分析和设计', emoji: '🎨', updated: '1周前' },
-    { id: 5, name: '技术调研', desc: '技术方案调研和评估', emoji: '🔬', updated: '2周前' },
-    { id: 6, name: '文档撰写', desc: '技术文档撰写', emoji: '📝', updated: '1月前' },
-  ])
+function SceneList({ onAction }) {
+  const scenes = [
+    { id: 1, name: '代码开发', emoji: '💻', desc: '多角色协作完成代码开发', updated: '2小时前' },
+    { id: 2, name: '内容创作', emoji: '✍️', desc: '创作优质内容', updated: '1天前' },
+    { id: 3, name: '商业分析', emoji: '📊', desc: '市场分析和决策', updated: '3天前' },
+    { id: 4, name: '产品设计', emoji: '🎨', desc: '产品需求分析和设计', updated: '1周前' },
+  ]
 
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">场景管理</h2>
-          <p className="text-[var(--muted-foreground)] text-sm mt-1">创建和管理 AI 协作场景</p>
+          <h2 className="text-2xl font-bold text-white">场景管理</h2>
+          <p className="text-white/70 text-sm mt-1">创建和管理 AI 协作场景</p>
         </div>
-        <button className="btn-primary">
+        <button 
+          className="btn-gradient"
+          onClick={() => onAction('create-scene')}
+        >
           + 新建场景
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {scenes.map((scene, index) => (
+        {scenes.map(scene => (
           <div 
             key={scene.id} 
-            className="card p-5 cursor-pointer animate-fadeIn"
-            style={{ animationDelay: `${index * 0.1}s` }}
+            className="glass-card p-5 cursor-pointer"
+            onClick={() => onAction('select-scene', scene.id)}
           >
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-2xl">{scene.emoji}</span>
-              <span className="text-xs text-[var(--muted-foreground)]">{scene.updated}</span>
-            </div>
+            <div className="text-3xl mb-3">{scene.emoji}</div>
             <h3 className="font-semibold mb-1">{scene.name}</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">{scene.desc}</p>
-            <button className="text-sm text-[var(--primary)] font-medium hover:underline">
-              开始会议 →
-            </button>
+            <p className="text-sm text-gray-500 mb-3">{scene.desc}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">{scene.updated}</span>
+              <button className="text-sm text-[var(--primary)] font-medium">
+                开始会议 →
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -198,94 +208,104 @@ function SceneList() {
 }
 
 // 会议大厅
-function MeetingHall() {
-  const [meetings] = useState([
-    { id: 1, name: '用户管理系统开发', status: '进行中', agents: 3, progress: 65 },
-    { id: 2, name: 'API 文档撰写', status: '已完成', agents: 2, progress: 100 },
-    { id: 3, name: '市场调研分析', status: '已暂停', agents: 4, progress: 30 },
-  ])
+function MeetingHall({ onAction }) {
+  const meetings = [
+    { id: 1, name: '用户管理系统开发', status: 'running', agents: 3, progress: 65 },
+    { id: 2, name: 'API 文档撰写', status: 'completed', agents: 2, progress: 100 },
+    { id: 3, name: '市场调研分析', status: 'paused', agents: 4, progress: 30 },
+  ]
+
+  const statusConfig = {
+    running: { label: '进行中', color: 'bg-blue-100 text-blue-600', icon: '▶' },
+    completed: { label: '已完成', color: 'bg-emerald-100 text-emerald-600', icon: '✓' },
+    paused: { label: '已暂停', color: 'bg-amber-100 text-amber-600', icon: '⏸' },
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">会议大厅</h2>
-          <p className="text-[var(--muted-foreground)] text-sm mt-1">启动和管理 AI 会议</p>
+          <h2 className="text-2xl font-bold text-white">会议大厅</h2>
+          <p className="text-white/70 text-sm mt-1">启动和管理 AI 会议</p>
         </div>
-        <button className="btn-primary">
+        <button 
+          className="btn-gradient"
+          onClick={() => onAction('new-meeting')}
+        >
           开始新会议
         </button>
       </div>
 
       <div className="space-y-3">
-        {meetings.map((meeting, index) => (
-          <div 
-            key={meeting.id} 
-            className="card p-5 animate-fadeIn"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">{meeting.name}</h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    meeting.status === '进行中' ? 'bg-blue-50 text-blue-600' :
-                    meeting.status === '已完成' ? 'bg-emerald-50 text-emerald-600' :
-                    'bg-amber-50 text-amber-600'
-                  }`}>
-                    {meeting.status}
-                  </span>
-                  <span className="text-xs text-[var(--muted-foreground)]">
-                    {meeting.agents} 个 Agent
-                  </span>
+        {meetings.map(meeting => {
+          const status = statusConfig[meeting.status]
+          return (
+            <div 
+              key={meeting.id} 
+              className="glass-card p-5 cursor-pointer"
+              onClick={() => onAction('view-meeting', meeting.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold">{meeting.name}</h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${status.color}`}>
+                      {status.icon} {status.label}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {meeting.agents} 个 Agent
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold">{meeting.progress}%</div>
-                <div className="w-24 bg-gray-100 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-[var(--primary)] rounded-full h-2 transition-all"
-                    style={{ width: `${meeting.progress}%` }}
-                  />
+                <div className="text-right">
+                  <div className="text-2xl font-bold">{meeting.progress}%</div>
+                  <div className="w-24 bg-white/50 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] rounded-full h-2 transition-all"
+                      style={{ width: `${meeting.progress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
 }
 
 // 监控页面
-function Monitor() {
+function Monitor({ onAction }) {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h2 className="text-2xl font-bold">实时监控</h2>
-        <p className="text-[var(--muted-foreground)] text-sm mt-1">监控会议状态和 Agent 活动</p>
+        <h2 className="text-2xl font-bold text-white">实时监控</h2>
+        <p className="text-white/70 text-sm mt-1">监控会议状态和 Agent 活动</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card p-6">
+        <div className="glass-card p-6">
           <h3 className="font-semibold mb-4">📊 系统状态</h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Agent 在线</span>
-              <span className="text-sm font-medium text-emerald-600">4/4</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">进行中会议</span>
-              <span className="text-sm font-medium">2</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">今日消息</span>
-              <span className="text-sm font-medium">128</span>
-            </div>
+            {[
+              { label: 'Agent 在线', value: '4/4', status: 'success' },
+              { label: '进行中会议', value: '2', status: 'info' },
+              { label: '今日消息', value: '128', status: 'info' },
+            ].map((item, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">{item.label}</span>
+                <span className={`text-sm font-medium ${
+                  item.status === 'success' ? 'text-emerald-600' : 'text-blue-600'
+                }`}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="glass-card p-6">
           <h3 className="font-semibold mb-4">⚡ 最近活动</h3>
           <div className="space-y-3">
             {[
@@ -300,7 +320,7 @@ function Monitor() {
                 }`} />
                 <div>
                   <div className="text-sm">{activity.text}</div>
-                  <div className="text-xs text-[var(--muted-foreground)]">{activity.time}</div>
+                  <div className="text-xs text-gray-400">{activity.time}</div>
                 </div>
               </div>
             ))}
@@ -311,25 +331,102 @@ function Monitor() {
   )
 }
 
+// 创建会议模态框
+function CreateMeetingModal({ onClose, onSubmit }) {
+  const [step, setStep] = useState(1)
+  const [data, setData] = useState({})
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+      <div className="glass p-6 max-w-md w-full mx-4">
+        <h3 className="text-xl font-semibold mb-4">创建新会议</h3>
+        
+        {step === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">会议名称</label>
+              <input 
+                type="text" 
+                className="w-full px-4 py-2 rounded-xl bg-white/50 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                placeholder="输入会议名称"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">选择场景</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['代码开发', '内容创作', '商业分析', '产品设计'].map(scene => (
+                  <button key={scene} className="py-2 px-3 rounded-xl bg-white/30 hover:bg-white/50 transition">
+                    {scene}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={onClose} className="btn-glass">取消</button>
+              <button onClick={() => setStep(2)} className="btn-gradient">下一步</button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-4">
+            <p className="text-gray-600">确认创建会议？</p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setStep(1)} className="btn-glass">返回</button>
+              <button onClick={onSubmit} className="btn-gradient">创建</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // 主应用
 function App() {
   const [view, setView] = useState('home')
+  const [loading, setLoading] = useState(false)
+  const [notification, setNotification] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+
+  const handleAction = async (action, data) => {
+    setLoading(true)
+    await delay(500)
+    setLoading(false)
+
+    switch (action) {
+      case 'new-meeting':
+        setShowModal(true)
+        break
+      case 'create-scene':
+        setNotification({ message: '场景创建成功！', type: 'success' })
+        break
+      case 'start-scene':
+        setNotification({ message: '会议启动成功！', type: 'success' })
+        break
+      default:
+        break
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <header className="bg-white border-b sticky top-0 z-10">
+    <div className="min-h-screen">
+      <header className="glass">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
-              AI
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl shadow-lg">
+              🤖
             </div>
-            <h1 className="text-xl font-bold">协作会议平台</h1>
+            <div>
+              <h1 className="text-xl font-bold text-white">AI 协作会议平台</h1>
+              <p className="text-sm text-white/70">人类当导演，AI当演员</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="btn-secondary text-sm">
-              帮助文档
+            <button className="btn-glass text-sm">
+              帮助
             </button>
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white">
               U
             </div>
           </div>
@@ -337,13 +434,31 @@ function App() {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        <Navigation currentView={view} onViewChange={setView} />
+        <Navigation currentView={view} onViewChange={setView} loading={loading} />
         
-        {view === 'home' && <Home />}
-        {view === 'scenes' && <SceneList />}
-        {view === 'meetings' && <MeetingHall />}
-        {view === 'monitor' && <Monitor />}
+        {view === 'home' && <Home onAction={handleAction} />}
+        {view === 'scenes' && <SceneList onAction={handleAction} />}
+        {view === 'meetings' && <MeetingHall onAction={handleAction} />}
+        {view === 'monitor' && <Monitor onAction={handleAction} />}
       </main>
+
+      {notification && (
+        <Notification 
+          message={notification.message} 
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      {showModal && (
+        <CreateMeetingModal 
+          onClose={() => setShowModal(false)}
+          onSubmit={() => {
+            setShowModal(false)
+            setNotification({ message: '会议创建成功！', type: 'success' })
+          }}
+        />
+      )}
     </div>
   )
 }
