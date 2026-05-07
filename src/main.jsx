@@ -524,7 +524,7 @@ function App() {
             </div>
 
             {/* 统计卡片 */}
-            <div className="grid grid-cols-4 gap-4 mb-6 stat-grid">
+            <div className="mb-6 stat-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px'}}>
               <StatCard icon="📋" label="场景总数" value={scenes.length} trend={8} color="purple" />
               <StatCard icon="🎤" label="会议次数" value={47} trend={12} color="pink" />
               <StatCard icon="💬" label="消息总数" value={384} trend={23} color="cyan" />
@@ -534,7 +534,7 @@ function App() {
             {/* 最近场景 */}
             <div className="dark-glass p-6">
               <h3 className="text-lg font-semibold text-white mb-5">最近使用的场景</h3>
-              <div className="grid grid-cols-3 gap-4 scene-grid">
+              <div className="scene-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
                 {scenes.map(scene => (
                   <SceneCard
                     key={scene.id}
