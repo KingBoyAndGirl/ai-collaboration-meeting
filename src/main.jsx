@@ -36,43 +36,30 @@ function useTheme() {
   return [theme, setTheme]
 }
 
-// 主题切换组件
+// 主题切换组件 - 点击直接切换
 function ThemeToggle({ theme, setTheme }) {
-  const [showDropdown, setShowDropdown] = useState(false)
-  
   const themes = [
-    { value: 'light', label: '日间', icon: '☀️' },
     { value: 'dark', label: '夜间', icon: '🌙' },
-    { value: 'system', label: '跟随系统', icon: '💻' },
+    { value: 'light', label: '日间', icon: '☀️' },
+    { value: 'system', label: '系统', icon: '💻' },
   ]
 
-  const currentTheme = themes.find(t => t.value === theme) || themes[2]
+  const currentIndex = themes.findIndex(t => t.value === theme)
+  const nextTheme = themes[(currentIndex + 1) % themes.length]
+  const currentTheme = themes[currentIndex >= 0 ? currentIndex : 0]
+
+  const handleClick = () => {
+    setTheme(nextTheme.value)
+  }
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button
-        className="theme-toggle-btn"
-        onClick={() => setShowDropdown(!showDropdown)}
-        title="切换主题"
-      >
-        {currentTheme.icon}
-      </button>
-      
-      {showDropdown && (
-        <div className="theme-dropdown">
-          {themes.map((t) => (
-            <button
-              key={t.value}
-              className={`theme-option ${theme === t.value ? 'active' : ''}`}
-              onClick={() => { setTheme(t.value); setShowDropdown(false) }}
-            >
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <button
+      className="theme-toggle-btn"
+      onClick={handleClick}
+      title={`当前: ${currentTheme.label} - 点击切换到${nextTheme.label}`}
+    >
+      {currentTheme.icon}
+    </button>
   )
 }
 
