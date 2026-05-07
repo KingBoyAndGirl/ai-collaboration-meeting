@@ -16,7 +16,7 @@ class ClaudeCodeAdapter(BaseMeetingAgent):
         # prodbox 使用自己的 AxonHub 密钥
         self.axonhub_key = config.get('axonhub_key') or os.getenv('AXONHUB_API_KEY', 'ah-a4b65c0ba15418661976745985401a3186233e7f3ee2d1379f556cceac07b64c')
         self.axonhub_url = config.get('axonhub_url', 'https://axonhub.nasw.heiyu.space/v1')
-        self.model = config.get('model', 'claude-sonnet-4-20250514')
+        self.model = config.get('model', 'auto-free')  # AxonHub 默认模型
         self.timeout = config.get('timeout', 180)
         self.use_cli = config.get('use_cli', False)  # 默认使用 API 模式
     
