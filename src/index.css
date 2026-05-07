@@ -590,8 +590,28 @@ textarea.input {
   display: flex;
   gap: 12px;
   margin-top: 24px;
-  padding-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid var(--border-light);
+}
+
+.form-error {
+  display: block;
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
+}
+
+.input-warning {
+  border-color: var(--warning) !important;
+}
+
+.input-warning::placeholder {
+  color: var(--warning);
 }
 
 /* 通知 */

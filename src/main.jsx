@@ -137,12 +137,25 @@ function StatCard({ icon, label, value, color }) {
 }
 
 // 场景卡片
-function SceneCard({ scene, onStart, onEdit }) {
+function SceneCard({ scene, onStart, onEdit, onDelete }) {
   return (
     <div className="scene-card" onClick={() => onEdit(scene)}>
-      <div className="scene-icon">{scene.icon}</div>
+      <div className="scene-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="scene-icon">{scene.icon}</div>
+        <button
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '4px 8px', fontSize: '12px', color: 'var(--danger)' }}
+          onClick={(e) => { e.stopPropagation(); onDelete(scene.id); }}
+          title="删除场景"
+        >
+          🗑️
+        </button>
+      </div>
       <h3 className="scene-name">{scene.name}</h3>
       <p className="scene-desc">{scene.description}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
+        <span>🤖 {scene.agents?.length || 0} 个 Agent</span>
+      </div>
       <button
         className="btn btn-primary btn-full"
         onClick={(e) => { e.stopPropagation(); onStart(scene); }}
@@ -163,6 +176,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
     { role: '架构师', model: 'claude-opus-4', prompt: '负责技术架构设计' },
     { role: '开发者', model: 'claude-sonnet-4', prompt: '负责代码实现' }
   ])
+  const [errors, setErrors] = useState({})
 
   React.useEffect(() => {
     const handleEscape = (e) => {
@@ -172,6 +186,22 @@ function SceneEditor({ scene, onSave, onCancel }) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [onCancel])
 
+  const validate = () => {
+    const newErrors = {}
+    if (!name.trim()) newErrors.name = '场景名称为必填项'
+    if (agents.length === 0) newErrors.agents = '至少需要配置一个 Agent'
+    const emptyRoles = agents.filter(a => !a.role.trim())
+    if (emptyRoles.length > 0) newErrors.agentRoles = '所有 Agent 必须填写角色名称'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSave = () => {
+    if (validate()) {
+      onSave({ ...scene, name, description, icon, agents })
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -180,14 +210,17 @@ function SceneEditor({ scene, onSave, onCancel }) {
         </h2>
 
         <div className="form-group">
-          <label className="form-label">场景名称</label>
+          <label className="form-label">
+            场景名称 <span style={{ color: 'var(--danger)' }}>*</span>
+          </label>
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
-            className="input"
+            onChange={e => { setName(e.target.value); setErrors(prev => ({ ...prev, name: null })) }}
+            className={`input ${errors.name ? 'input-error' : ''}`}
             placeholder="例：代码开发、产品设计"
           />
+          {errors.name && <span className="form-error">{errors.name}</span>}
         </div>
 
         <div className="form-group">
@@ -219,7 +252,9 @@ function SceneEditor({ scene, onSave, onCancel }) {
 
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>Agent 配置</label>
+            <label className="form-label" style={{ marginBottom: 0 }}>
+              Agent 配置 <span style={{ color: 'var(--danger)' }}>*</span>
+            </label>
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => setAgents([...agents, { role: '', model: 'claude-sonnet-4', prompt: '' }])}
@@ -227,22 +262,41 @@ function SceneEditor({ scene, onSave, onCancel }) {
               + 添加
             </button>
           </div>
+          {errors.agents && <span className="form-error" style={{ display: 'block', marginBottom: '12px' }}>{errors.agents}</span>}
+          {errors.agentRoles && <span className="form-error" style={{ display: 'block', marginBottom: '12px' }}>{errors.agentRoles}</span>}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {agents.map((agent, i) => (
               <div key={i} className="card" style={{ padding: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                  <input
-                    type="text"
-                    value={agent.role}
-                    onChange={e => {
-                      const newAgents = [...agents]
-                      newAgents[i].role = e.target.value
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Agent #{i + 1}</span>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--danger)', padding: '2px 8px' }}
+                    onClick={() => {
+                      const newAgents = agents.filter((_, idx) => idx !== i)
                       setAgents(newAgents)
+                      setErrors(prev => ({ ...prev, agents: null, agentRoles: null }))
                     }}
-                    className="input"
-                    placeholder="角色名称"
-                  />
+                  >
+                    删除
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <input
+                      type="text"
+                      value={agent.role}
+                      onChange={e => {
+                        const newAgents = [...agents]
+                        newAgents[i].role = e.target.value
+                        setAgents(newAgents)
+                        setErrors(prev => ({ ...prev, agentRoles: null }))
+                      }}
+                      className={`input ${!agent.role.trim() ? 'input-warning' : ''}`}
+                      placeholder="角色名称 *"
+                    />
+                  </div>
                   <select
                     value={agent.executor || agent.model}
                     onChange={e => {
@@ -290,7 +344,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
             type="button"
             className="btn btn-primary"
             style={{ flex: 1 }}
-            onClick={() => onSave({ ...scene, name, description, icon, agents })}
+            onClick={handleSave}
           >
             保存场景
           </button>
@@ -747,6 +801,13 @@ function App() {
     setShowSceneEditor(false)
   }, [])
 
+  const handleDeleteScene = (sceneId) => {
+    if (confirm('确定删除这个场景？此操作不可恢复。')) {
+      setScenes(prev => prev.filter(s => s.id !== sceneId))
+      showNotification('场景已删除')
+    }
+  }
+
   // Agent CRUD
   const handleAddAgent = (agentData) => {
     setAgents(prev => [...prev, { ...agentData, id: `agent_${Date.now()}` }])
@@ -817,6 +878,7 @@ function App() {
                   scene={scene}
                   onStart={handleStartMeeting}
                   onEdit={handleEditScene}
+                  onDelete={handleDeleteScene}
                 />
               ))}
             </div>
@@ -846,6 +908,7 @@ function App() {
                   scene={scene}
                   onStart={handleStartMeeting}
                   onEdit={handleEditScene}
+                  onDelete={handleDeleteScene}
                 />
               ))}
             </div>
