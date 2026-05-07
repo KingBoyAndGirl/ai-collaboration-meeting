@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 
@@ -99,6 +99,17 @@ function SceneEditor({ scene, onSave, onCancel }) {
     { role: '开发者', model: 'claude-sonnet-4', prompt: '负责代码实现' }
   ])
 
+  // 添加ESC键关闭弹窗功能
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onCancel()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [onCancel])
+
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -187,10 +198,11 @@ function SceneEditor({ scene, onSave, onCancel }) {
         </div>
 
         <div className="flex justify-end gap-4 mt-8">
-          <button className="glass-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancel(); }}>取消</button>
+          <button type="button" className="glass-btn" onClick={() => onCancel()}>取消</button>
           <button
+            type="button"
             className="gradient-btn"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSave({ ...scene, name, description, agents }); }}
+            onClick={() => onSave({ ...scene, name, description, agents })}
           >
             保存场景
           </button>
@@ -468,6 +480,11 @@ function App() {
     showNotification('场景已保存')
   }
 
+  const handleCancelScene = useCallback(() => {
+    console.log('Cancel clicked')
+    setShowSceneEditor(false)
+  }, [])
+
   return (
     <div className="min-h-screen">
       {/* 通知 */}
@@ -599,10 +616,7 @@ function App() {
         <SceneEditor
           scene={currentScene}
           onSave={handleSaveScene}
-          onCancel={() => {
-            console.log('Cancel clicked')
-            setShowSceneEditor(false)
-          }}
+          onCancel={handleCancelScene}
         />
       )}
 
