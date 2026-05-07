@@ -10,65 +10,66 @@ function Notification({ message, type, onClose }) {
   }, [])
 
   return (
-    <div className="fixed top-6 right-6 z-50 animate-slideUp">
-      <div className={`flex items-center gap-3 px-5 py-4 rounded-xl ${
-        type === 'success' 
-          ? 'bg-emerald-500/20 border border-emerald-500/30' 
-          : 'bg-blue-500/20 border border-blue-500/30'
-      }`}>
-        <span className="text-xl">{type === 'success' ? '✓' : 'ℹ'}</span>
-        <span className="font-medium text-white">{message}</span>
-      </div>
+    <div className={`notification ${type}`}>
+      <span style={{ fontSize: '18px' }}>{type === 'success' ? '✓' : 'ℹ'}</span>
+      <span style={{ fontWeight: 500 }}>{message}</span>
     </div>
   )
 }
 
-// 导航组件
-function Navigation({ currentView, onViewChange }) {
+// 顶部导航
+function TopNav({ currentView, onViewChange }) {
   const navItems = [
     { id: 'home', label: '首页', icon: '🏠' },
     { id: 'scenes', label: '场景', icon: '📋' },
     { id: 'agents', label: 'Agent', icon: '🤖' },
-    { id: 'meetings', label: '会议', icon: '🎤' },
+    { id: 'meetings', label: '会议', icon: '💬' },
     { id: 'monitor', label: '监控', icon: '📊' },
   ]
 
   return (
-    <div className="flex gap-2 p-1.5 dark-glass rounded-2xl mb-6">
-      {navItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => onViewChange(item.id)}
-          className={`nav-tab flex-1 justify-center ${currentView === item.id ? 'active' : ''}`}
-        >
-          <span>{item.icon}</span>
-          <span>{item.label}</span>
-        </button>
-      ))}
-    </div>
+    <nav className="top-nav">
+      <div className="nav-container">
+        <div className="nav-logo">
+          <div className="nav-logo-icon">AI</div>
+          <span>AI 协作会议</span>
+        </div>
+        
+        <div className="nav-tabs">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onViewChange(item.id)}
+              className={`nav-tab ${currentView === item.id ? 'active' : ''}`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        <div className="nav-right">
+          <div className="nav-avatar">👤</div>
+        </div>
+      </div>
+    </nav>
   )
 }
 
 // 统计卡片
-function StatCard({ icon, label, value, trend, color }) {
+function StatCard({ icon, label, value, color }) {
   const [count, setCount] = useState(0)
-
+  
   useEffect(() => {
-    const timer = setTimeout(() => setCount(value), 300)
+    const timer = setTimeout(() => setCount(value), 100)
     return () => clearTimeout(timer)
   }, [value])
 
   return (
     <div className="stat-card">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`stat-icon ${color}`}>{icon}</div>
-        <div className="flex items-center gap-1 text-emerald-400 text-sm font-medium">
-          <span>↑</span>
-          <span>{trend}%</span>
-        </div>
-      </div>
-      <div className="text-3xl font-bold text-white mb-1">{count}</div>
-      <div className="text-sm text-white/50">{label}</div>
+      <div className={`stat-icon ${color}`}>{icon}</div>
+      <div className="stat-value">{count}</div>
+      <div className="stat-label">{label}</div>
     </div>
   )
 }
@@ -77,11 +78,11 @@ function StatCard({ icon, label, value, trend, color }) {
 function SceneCard({ scene, onStart, onEdit }) {
   return (
     <div className="scene-card" onClick={() => onEdit(scene)}>
-      <span className="scene-emoji">{scene.icon}</span>
-      <h3 className="text-lg font-semibold text-white mb-2">{scene.name}</h3>
-      <p className="text-sm text-white/50 mb-5 line-clamp-2">{scene.description}</p>
+      <div className="scene-icon">{scene.icon}</div>
+      <h3 className="scene-name">{scene.name}</h3>
+      <p className="scene-desc">{scene.description}</p>
       <button
-        className="gradient-btn w-full text-sm"
+        className="btn btn-primary btn-full"
         onClick={(e) => { e.stopPropagation(); onStart(scene); }}
       >
         开始会议 →
@@ -101,12 +102,9 @@ function SceneEditor({ scene, onSave, onCancel }) {
     { role: '开发者', model: 'claude-sonnet-4', prompt: '负责代码实现' }
   ])
 
-  // 添加ESC键关闭弹窗功能
   React.useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onCancel()
-      }
+      if (e.key === 'Escape') onCancel()
     }
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
@@ -115,123 +113,121 @@ function SceneEditor({ scene, onSave, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold text-white mb-6">
+        <h2 className="modal-title">
           {scene ? '编辑场景' : '新建场景'}
         </h2>
 
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">场景名称</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="dark-input"
-              placeholder="例：代码开发、产品设计、技术评审"
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">场景名称</label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="input"
+            placeholder="例：代码开发、产品设计"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">场景描述</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="dark-input min-h-[100px] resize-none"
-              placeholder="描述这个场景的目的和流程"
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">场景描述</label>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            className="input"
+            placeholder="描述这个场景的目的和流程"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">场景图标</label>
-            <div className="flex flex-wrap gap-2">
-              {['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼', '🔬', '📚', '💻', '✍️', '📈', '🤖', '🧠', '💡', '🔐', '📱'].map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setIcon(emoji)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
-                    icon === emoji ? 'bg-purple-500/50 ring-2 ring-purple-400' : 'bg-white/5 hover:bg-white/10'
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <label className="text-sm font-medium text-white/70">Agent 配置</label>
+        <div className="form-group">
+          <label className="form-label">场景图标</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼', '🔬', '📚', '💻', '✍️', '📈', '🤖', '🧠', '🔐'].map((emoji) => (
               <button
-                className="glass-btn text-sm"
-                onClick={() => setAgents([...agents, { role: '', model: 'claude-sonnet-4', prompt: '' }])}
+                key={emoji}
+                type="button"
+                onClick={() => setIcon(emoji)}
+                className={`btn ${icon === emoji ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ width: '44px', height: '44px', fontSize: '20px', padding: 0 }}
               >
-                + 添加 Agent
+                {emoji}
               </button>
-            </div>
-
-            <div className="space-y-4">
-              {agents.map((agent, i) => (
-                <div key={i} className="dark-card p-4">
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <input
-                      type="text"
-                      value={agent.role}
-                      onChange={e => {
-                        const newAgents = [...agents]
-                        newAgents[i].role = e.target.value
-                        setAgents(newAgents)
-                      }}
-                      className="dark-input"
-                      placeholder="角色名称"
-                    />
-                    <select
-                      value={agent.executor || agent.model}
-                      onChange={e => {
-                        const newAgents = [...agents]
-                        newAgents[i].executor = e.target.value
-                        newAgents[i].model = e.target.value  // 兼容旧数据
-                        setAgents(newAgents)
-                      }}
-                      className="dark-input"
-                    >
-                      <optgroup label="Hermes Agent">
-                        <option value="hermes">🤖 Hermes Agent (本地)</option>
-                      </optgroup>
-                      <optgroup label="Claude 系列">
-                        <option value="claude_code">💻 Claude Code (AxonHub)</option>
-                        <option value="claude-opus-4">Claude Opus 4</option>
-                        <option value="claude-sonnet-4">Claude Sonnet 4</option>
-                      </optgroup>
-                      <optgroup label="OpenAI 系列">
-                        <option value="openai">🔌 OpenAI (AxonHub)</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                      </optgroup>
-                    </select>
-                  </div>
-                  <input
-                    type="text"
-                    value={agent.prompt}
-                    onChange={e => {
-                      const newAgents = [...agents]
-                      newAgents[i].prompt = e.target.value
-                      setAgents(newAgents)
-                    }}
-                    className="dark-input"
-                    placeholder="角色提示词"
-                  />
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 mt-8">
-          <button type="button" className="glass-btn" onClick={() => onCancel()}>取消</button>
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>Agent 配置</label>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setAgents([...agents, { role: '', model: 'claude-sonnet-4', prompt: '' }])}
+            >
+              + 添加
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {agents.map((agent, i) => (
+              <div key={i} className="card" style={{ padding: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    value={agent.role}
+                    onChange={e => {
+                      const newAgents = [...agents]
+                      newAgents[i].role = e.target.value
+                      setAgents(newAgents)
+                    }}
+                    className="input"
+                    placeholder="角色名称"
+                  />
+                  <select
+                    value={agent.executor || agent.model}
+                    onChange={e => {
+                      const newAgents = [...agents]
+                      newAgents[i].executor = e.target.value
+                      newAgents[i].model = e.target.value
+                      setAgents(newAgents)
+                    }}
+                    className="input"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <optgroup label="Hermes Agent">
+                      <option value="hermes">🤖 Hermes Agent</option>
+                    </optgroup>
+                    <optgroup label="Claude">
+                      <option value="claude_code">💻 Claude Code</option>
+                      <option value="claude-opus-4">Claude Opus 4</option>
+                      <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                    </optgroup>
+                    <optgroup label="OpenAI">
+                      <option value="openai">🔌 OpenAI</option>
+                      <option value="gpt-4o">GPT-4o</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  value={agent.prompt}
+                  onChange={e => {
+                    const newAgents = [...agents]
+                    newAgents[i].prompt = e.target.value
+                    setAgents(newAgents)
+                  }}
+                  className="input"
+                  placeholder="角色提示词"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-actions">
+          <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={onCancel}>取消</button>
           <button
             type="button"
-            className="gradient-btn"
+            className="btn btn-primary"
+            style={{ flex: 1 }}
             onClick={() => onSave({ ...scene, name, description, icon, agents })}
           >
             保存场景
@@ -266,66 +262,63 @@ function AgentManager({ agents, onAdd, onUpdate, onDelete }) {
   }
   
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">🤖 Agent 管理</h2>
+    <div className="animate-fadeIn">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="page-title">Agent 管理</h1>
+          <p className="page-subtitle">配置和管理你的 AI Agent</p>
+        </div>
         <button
-          className="gradient-btn"
+          className="btn btn-primary"
           onClick={() => { setEditingAgent(null); setShowForm(true) }}
         >
           + 添加 Agent
         </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="agents-grid">
         {allAgents.map((agent) => (
-          <div key={agent.id} className="dark-card p-5">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
-                  agent.type === 'hermes' ? 'bg-purple-500/20' : 
-                  agent.type === 'claude_code' ? 'bg-orange-500/20' : 'bg-green-500/20'
-                }`}>
-                  {agent.type === 'hermes' ? '🤖' : agent.type === 'claude_code' ? '💻' : '🔌'}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    agent.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {agent.status === 'active' ? '运行中' : '已禁用'}
-                  </span>
-                </div>
+          <div key={agent.id} className="agent-card">
+            <div className="agent-header">
+              <div className={`agent-icon ${
+                agent.type === 'hermes' ? 'hermes' : 
+                agent.type === 'claude_code' ? 'claude' : 
+                agent.type === 'openai' ? 'openai' : 'custom'
+              }`}>
+                {agent.type === 'hermes' ? '🤖' : agent.type === 'claude_code' ? '💻' : agent.type === 'openai' ? '🔌' : '⚙️'}
               </div>
+              {agent.status === 'active' && (
+                <div className="agent-status">
+                  <div className="agent-status-dot"></div>
+                  运行中
+                </div>
+              )}
             </div>
             
-            <p className="text-sm text-white/60 mb-4">{agent.description}</p>
+            <h3 className="agent-name">{agent.name}</h3>
+            <p className="agent-desc">{agent.description}</p>
             
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">类型</span>
-                <span className="text-white">{agent.type}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/50">模型</span>
-                <span className="text-white">{agent.config?.model || '默认'}</span>
-              </div>
+            <div className="agent-meta">
+              <span className="agent-tag">{agent.type}</span>
+              <span className="agent-tag">{agent.config?.model || '默认'}</span>
             </div>
             
-            <div className="flex gap-2">
+            <div className="agent-actions">
               <button
-                className="glass-btn flex-1 text-sm"
+                className="btn btn-secondary btn-sm"
+                style={{ flex: 1 }}
                 onClick={() => { setEditingAgent(agent); setShowForm(true) }}
               >
                 编辑
               </button>
-              {agent.type === 'hermes' || agent.type === 'claude_code' || agent.type === 'openai' ? (
-                <button className="glass-btn text-sm opacity-50 cursor-not-allowed" disabled>
+              {(agent.type === 'hermes' || agent.type === 'claude_code' || agent.type === 'openai') ? (
+                <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} disabled>
                   内置
                 </button>
               ) : (
                 <button
-                  className="glass-btn text-sm text-red-400 hover:bg-red-500/20"
+                  className="btn btn-danger btn-sm"
+                  style={{ flex: 1 }}
                   onClick={() => onDelete(agent.id)}
                 >
                   删除
@@ -336,7 +329,6 @@ function AgentManager({ agents, onAdd, onUpdate, onDelete }) {
         ))}
       </div>
       
-      {/* Agent 编辑弹窗 */}
       {showForm && (
         <AgentForm
           agent={editingAgent}
@@ -348,7 +340,7 @@ function AgentManager({ agents, onAdd, onUpdate, onDelete }) {
   )
 }
 
-// Agent 表单组件
+// Agent 表单
 function AgentForm({ agent, onSave, onCancel }) {
   const [name, setName] = useState(agent?.name || '')
   const [type, setType] = useState(agent?.type || 'hermes')
@@ -376,94 +368,88 @@ function AgentForm({ agent, onSave, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold text-white mb-6">
+        <h2 className="modal-title">
           {agent ? '编辑 Agent' : '添加 Agent'}
         </h2>
         
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">Agent 名称</label>
+        <div className="form-group">
+          <label className="form-label">Agent 名称</label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="input"
+            placeholder="例：我的 Hermes Agent"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">Agent 类型</label>
+          <div className="type-selector">
+            {agentTypes.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setType(t.value)}
+                className={`type-option ${type === t.value ? 'selected' : ''}`}
+              >
+                <span className="type-option-icon">{t.icon}</span>
+                <span className="type-option-label">{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">描述</label>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            className="input"
+            placeholder="描述这个 Agent 的用途"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">默认模型</label>
+          <input
+            type="text"
+            value={config.model || ''}
+            onChange={e => setConfig({ ...config, model: e.target.value })}
+            className="input"
+            placeholder="例：auto-free, claude-sonnet-4"
+          />
+        </div>
+        
+        {type === 'hermes' && (
+          <div className="form-group">
+            <label className="form-label">Hermes 路径</label>
             <input
               type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="dark-input"
-              placeholder="例：我的 Hermes Agent"
+              value={config.path || ''}
+              onChange={e => setConfig({ ...config, path: e.target.value })}
+              className="input"
+              placeholder="/usr/local/bin/hermes"
             />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">Agent 类型</label>
-            <div className="grid grid-cols-2 gap-3">
-              {agentTypes.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setType(t.value)}
-                  className={`p-3 rounded-xl border transition-all ${
-                    type === t.value
-                      ? 'bg-purple-500/30 border-purple-500/50'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <span className="text-xl mr-2">{t.icon}</span>
-                  <span className="text-white text-sm">{t.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">描述</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="dark-input min-h-[80px] resize-none"
-              placeholder="描述这个 Agent 的用途"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">默认模型</label>
+        )}
+        
+        {(type === 'claude_code' || type === 'openai' || type === 'custom') && (
+          <div className="form-group">
+            <label className="form-label">API 端点</label>
             <input
               type="text"
-              value={config.model || ''}
-              onChange={e => setConfig({ ...config, model: e.target.value })}
-              className="dark-input"
-              placeholder="例：auto-free, claude-sonnet-4"
+              value={config.axonhub_url || config.api_url || ''}
+              onChange={e => setConfig({ ...config, axonhub_url: e.target.value })}
+              className="input"
+              placeholder="https://api.example.com/v1"
             />
           </div>
-          
-          {type === 'hermes' && (
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">Hermes 路径</label>
-              <input
-                type="text"
-                value={config.path || ''}
-                onChange={e => setConfig({ ...config, path: e.target.value })}
-                className="dark-input"
-                placeholder="/usr/local/bin/hermes"
-              />
-            </div>
-          )}
-          
-          {(type === 'claude_code' || type === 'openai' || type === 'custom') && (
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">API 端点</label>
-              <input
-                type="text"
-                value={config.axonhub_url || config.api_url || ''}
-                onChange={e => setConfig({ ...config, axonhub_url: e.target.value })}
-                className="dark-input"
-                placeholder="https://api.example.com/v1"
-              />
-            </div>
-          )}
-          
-          <div className="flex gap-3 pt-4">
-            <button className="glass-btn flex-1" onClick={onCancel}>取消</button>
-            <button className="gradient-btn flex-1" onClick={handleSubmit}>保存</button>
-          </div>
+        )}
+        
+        <div className="form-actions">
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onCancel}>取消</button>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit}>保存</button>
         </div>
       </div>
     </div>
@@ -500,88 +486,55 @@ function MeetingHall({ scene, onComplete }) {
           content: `我是${agent.role}，使用 ${agent.model}。我正在分析需求并准备提出建议...`,
           timestamp: new Date()
         }])
+        
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
       }
-
+      
+      await new Promise(r => setTimeout(r, 1000))
       setStatus('review')
-      setCurrentAgent(null)
     }
 
     startMeeting()
   }, [scene])
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const avatarColors = {
-    '产品经理': 'bg-purple-500/30 text-purple-300',
-    '架构师': 'bg-cyan-500/30 text-cyan-300',
-    '开发者': 'bg-emerald-500/30 text-emerald-300'
-  }
-
   return (
-    <div className="modal-overlay" onClick={onComplete}>
-      <div className="modal-content max-w-4xl" onClick={e => e.stopPropagation()}>
-        {/* 头部 */}
-        <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/10">
+    <div className="modal-overlay" style={{ background: 'var(--bg-primary)' }}>
+      <div style={{ width: '100%', maxWidth: '900px', height: '90vh', display: 'flex', flexDirection: 'column', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
-            <h2 className="text-xl font-bold text-white">会议进行中</h2>
-            <p className="text-sm text-white/50 mt-1">
-              {scene?.name || '代码开发'} · {status === 'running' ? '讨论中' : status === 'preparing' ? '准备中' : '待审核'}
+            <h2 style={{ fontSize: '20px', fontWeight: 600 }}>{scene?.name || '会议进行中'}</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+              {status === 'preparing' ? '准备中...' : status === 'running' ? `${currentAgent?.role || 'Agent'} 发言中` : '会议完成'}
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            {status === 'running' && currentAgent && (
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <div className="status-dot active"></div>
-                <span>{currentAgent.role} 发言中...</span>
-              </div>
-            )}
-            <button className="glass-btn text-sm" onClick={onComplete}>结束会议</button>
-          </div>
+          <button className="btn btn-ghost" onClick={onComplete}>✕ 关闭</button>
         </div>
 
-        {/* 消息列表 */}
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto mb-6">
-          {messages.length === 0 && status === 'preparing' && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-white/50">正在准备会议环境...</p>
-            </div>
-          )}
-
-          {messages.map(msg => (
-            <div key={msg.id} className="flex gap-4 animate-fadeIn">
-              <div className={`message-avatar ${avatarColors[msg.role] || 'bg-white/10 text-white/70'}`}>
-                {msg.role[0]}
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {messages.map((msg) => (
+            <div key={msg.id} className="card" style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 600 }}>{msg.role}</span>
+                <span className="agent-tag">{msg.model}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: 'auto' }}>
+                  {msg.timestamp.toLocaleTimeString()}
+                </span>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-medium text-white">{msg.role}</span>
-                  <span className="badge badge-purple text-xs">{msg.model}</span>
-                  <span className="text-xs text-white/30">
-                    {msg.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-                <div className="message-bubble">
-                  <p className="text-white/80">{msg.content}</p>
-                </div>
-              </div>
+              <p style={{ color: 'var(--text-secondary)' }}>{msg.content}</p>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* 底部 */}
         {status === 'review' && (
-          <div className="pt-6 border-t border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-400">
-              <span className="text-xl">✓</span>
-              <span className="font-medium">会议讨论完成</span>
+          <div style={{ paddingTop: '20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--success)' }}>
+              <span style={{ fontSize: '20px' }}>✓</span>
+              <span style={{ fontWeight: 500 }}>会议讨论完成</span>
             </div>
-            <div className="flex gap-3">
-              <button className="glass-btn">导出记录</button>
-              <button className="gradient-btn">审核结果</button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="btn btn-secondary">导出记录</button>
+              <button className="btn btn-primary">审核结果</button>
             </div>
           </div>
         )}
@@ -620,67 +573,45 @@ function MonitorPanel() {
   ]
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <h2 className="text-2xl font-bold text-white">系统监控</h2>
+    <div className="animate-fadeIn">
+      <div className="page-header">
+        <h1 className="page-title">系统监控</h1>
+        <p className="page-subtitle">实时监控系统运行状态</p>
+      </div>
 
-      {/* 概览卡片 */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="stat-card text-center">
-          <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            {metrics.requests}
-          </div>
-          <div className="text-sm text-white/50 mt-2">今日请求数</div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon purple">📊</div>
+          <div className="stat-value">{metrics.requests}</div>
+          <div className="stat-label">今日请求数</div>
         </div>
-        <div className="stat-card text-center">
-          <div className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-            {metrics.tokens.toLocaleString()}
-          </div>
-          <div className="text-sm text-white/50 mt-2">消耗 Tokens</div>
+        <div className="stat-card">
+          <div className="stat-icon green">💬</div>
+          <div className="stat-value">{metrics.tokens.toLocaleString()}</div>
+          <div className="stat-label">消耗 Tokens</div>
         </div>
-        <div className="stat-card text-center">
-          <div className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-            ${metrics.cost.toFixed(2)}
-          </div>
-          <div className="text-sm text-white/50 mt-2">预计费用</div>
+        <div className="stat-card">
+          <div className="stat-icon amber">💰</div>
+          <div className="stat-value">${metrics.cost.toFixed(2)}</div>
+          <div className="stat-label">预计费用</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon pink">⚡</div>
+          <div className="stat-value">{metrics.cpu.toFixed(0)}%</div>
+          <div className="stat-label">CPU 使用率</div>
         </div>
       </div>
 
-      {/* 资源使用 */}
-      <div className="dark-glass p-6">
-        <h3 className="font-semibold text-white mb-5">资源使用</h3>
-        <div className="space-y-5">
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-white/60">CPU 使用率</span>
-              <span className="text-white font-medium">{metrics.cpu.toFixed(1)}%</span>
-            </div>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${metrics.cpu}%` }} />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-white/60">内存使用率</span>
-              <span className="text-white font-medium">{metrics.memory.toFixed(1)}%</span>
-            </div>
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${metrics.memory}%` }} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 服务状态 */}
-      <div className="dark-glass p-6">
-        <h3 className="font-semibold text-white mb-5">服务状态</h3>
-        <div className="space-y-4">
-          {services.map((svc, i) => (
-            <div key={i} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className={`status-dot ${svc.status === 'healthy' ? 'active' : 'warning'}`} />
-                <span className="text-white/80">{svc.name}</span>
+      <div className="card">
+        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>服务状态</h3>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {services.map((service) => (
+            <div key={service.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: service.status === 'healthy' ? 'var(--success)' : 'var(--warning)' }}></div>
+                <span>{service.name}</span>
               </div>
-              <span className="text-sm text-white/40">{svc.latency}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{service.latency}</span>
             </div>
           ))}
         </div>
@@ -718,10 +649,8 @@ function App() {
   }
 
   const handleStartMeeting = (scene) => {
-    console.log('handleStartMeeting called with scene:', scene?.name)
     setCurrentScene(scene)
     setShowMeeting(true)
-    console.log('setShowMeeting(true) called')
   }
 
   const handleEditScene = (scene) => {
@@ -733,8 +662,7 @@ function App() {
     if (sceneData.id) {
       setScenes(prev => prev.map(s => s.id === sceneData.id ? sceneData : s))
     } else {
-      // 为新场景添加默认图标
-      const defaultIcons = ['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼', '🔬', '📚']
+      const defaultIcons = ['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼']
       const icon = sceneData.icon || defaultIcons[Math.floor(Math.random() * defaultIcons.length)]
       setScenes(prev => [...prev, { ...sceneData, icon, id: Date.now() }])
     }
@@ -743,11 +671,10 @@ function App() {
   }
 
   const handleCancelScene = useCallback(() => {
-    console.log('Cancel clicked')
     setShowSceneEditor(false)
   }, [])
 
-  // Agent CRUD 处理函数
+  // Agent CRUD
   const handleAddAgent = (agentData) => {
     setAgents(prev => [...prev, { ...agentData, id: `agent_${Date.now()}` }])
     showNotification('Agent 已添加')
@@ -766,8 +693,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* 通知 */}
+    <div>
+      <TopNav currentView={currentView} onViewChange={setCurrentView} />
+      
       {notification && (
         <Notification
           message={notification.message}
@@ -776,73 +704,48 @@ function App() {
         />
       )}
 
-      <div className="dark-container">
-        {/* 头部 */}
-        <header className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
-              AI
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">AI 协作会议平台</h1>
-              <p className="text-sm text-white/40">人类当导演，AI当演员</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="glass-btn text-sm">帮助</button>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-xl flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform">
-              👤
-            </div>
-          </div>
-        </header>
-
-        {/* 导航 */}
-        <Navigation currentView={currentView} onViewChange={setCurrentView} />
-
+      <main className="main-content">
         {/* 首页 */}
         {currentView === 'home' && (
           <div className="animate-fadeIn">
-            {/* 欢迎区 */}
-            <div className="dark-glass p-8 mb-6">
-              <h2 className="text-3xl font-bold text-white mb-2">欢迎回来 👋</h2>
-              <p className="text-white/50 mb-6">准备好开始今天的 AI 协作了吗？</p>
-              <div className="flex gap-4">
-                <button
-                  className="gradient-btn"
-                  onClick={() => {
-                    setCurrentScene(null)
-                    setShowSceneEditor(true)
-                  }}
-                >
-                  ✨ 开始新会议
-                </button>
-                <button className="glass-btn">
-                  📖 查看文档
-                </button>
+            <div className="page-header">
+              <h1 className="page-title">欢迎回来 👋</h1>
+              <p className="page-subtitle">准备好开始今天的 AI 协作了吗？</p>
+            </div>
+
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon purple">📋</div>
+                <div className="stat-value">{scenes.length}</div>
+                <div className="stat-label">场景总数</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon green">🎤</div>
+                <div className="stat-value">0</div>
+                <div className="stat-label">会议次数</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon amber">💬</div>
+                <div className="stat-value">0</div>
+                <div className="stat-label">消息总数</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon pink">🤖</div>
+                <div className="stat-value">0</div>
+                <div className="stat-label">Agent 调用</div>
               </div>
             </div>
 
-            {/* 统计卡片 */}
-            <div className="mb-6 stat-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px'}}>
-              <StatCard icon="📋" label="场景总数" value={scenes.length} trend={8} color="purple" />
-              <StatCard icon="🎤" label="会议次数" value={47} trend={12} color="pink" />
-              <StatCard icon="💬" label="消息总数" value={384} trend={23} color="cyan" />
-              <StatCard icon="🤖" label="Agent 调用" value={156} trend={15} color="amber" />
-            </div>
-
-            {/* 最近场景 */}
-            <div className="dark-glass p-6">
-              <h3 className="text-lg font-semibold text-white mb-5">最近使用的场景</h3>
-              <div className="scene-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
-                {scenes.map(scene => (
-                  <SceneCard
-                    key={scene.id}
-                    scene={scene}
-                    onStart={handleStartMeeting}
-                    onEdit={handleEditScene}
-                  />
-                ))}
-              </div>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>最近使用的场景</h3>
+            <div className="scenes-grid">
+              {scenes.slice(0, 3).map(scene => (
+                <SceneCard
+                  key={scene.id}
+                  scene={scene}
+                  onStart={handleStartMeeting}
+                  onEdit={handleEditScene}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -850,20 +753,20 @@ function App() {
         {/* 场景列表 */}
         {currentView === 'scenes' && (
           <div className="animate-fadeIn">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">场景管理</h2>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h1 className="page-title">场景管理</h1>
+                <p className="page-subtitle">创建和管理协作场景</p>
+              </div>
               <button
-                className="gradient-btn"
-                onClick={() => {
-                  setCurrentScene(null)
-                  setShowSceneEditor(true)
-                }}
+                className="btn btn-primary"
+                onClick={() => { setCurrentScene(null); setShowSceneEditor(true) }}
               >
                 + 新建场景
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 scene-grid">
+            <div className="scenes-grid">
               {scenes.map(scene => (
                 <SceneCard
                   key={scene.id}
@@ -878,30 +781,33 @@ function App() {
 
         {/* Agent 管理 */}
         {currentView === 'agents' && (
-          <div className="animate-fadeIn">
-            <AgentManager
-              agents={agents}
-              onAdd={handleAddAgent}
-              onUpdate={handleUpdateAgent}
-              onDelete={handleDeleteAgent}
-            />
-          </div>
+          <AgentManager
+            agents={agents}
+            onAdd={handleAddAgent}
+            onUpdate={handleUpdateAgent}
+            onDelete={handleDeleteAgent}
+          />
         )}
 
         {/* 会议列表 */}
         {currentView === 'meetings' && (
           <div className="animate-fadeIn">
-            <h2 className="text-2xl font-bold text-white mb-6">会议记录</h2>
-            <div className="dark-glass p-8 text-center">
-              <div className="text-6xl mb-4">📝</div>
-              <p className="text-white/50">暂无会议记录，开始第一次会议吧</p>
+            <div className="page-header">
+              <h1 className="page-title">会议记录</h1>
+              <p className="page-subtitle">查看历史会议记录</p>
+            </div>
+            <div className="empty-state">
+              <div className="empty-icon">📝</div>
+              <div className="empty-title">暂无会议记录</div>
+              <p className="empty-desc">开始第一次会议吧</p>
+              <button className="btn btn-primary" onClick={() => setCurrentView('scenes')}>浏览场景</button>
             </div>
           </div>
         )}
 
         {/* 监控面板 */}
         {currentView === 'monitor' && <MonitorPanel />}
-      </div>
+      </main>
 
       {/* 场景编辑器弹窗 */}
       {showSceneEditor && (
@@ -917,7 +823,6 @@ function App() {
         <MeetingHall
           scene={currentScene}
           onComplete={() => {
-            console.log('Complete clicked')
             setShowMeeting(false)
             showNotification('会议已完成')
           }}
