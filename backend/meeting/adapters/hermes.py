@@ -10,7 +10,7 @@ class HermesAdapter(BaseMeetingAgent):
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
-        self.hermes_path = config.get('hermes_path', 'hermes')
+        self.hermes_path = config.get('hermes_path', '/home/prodbox/.local/bin/hermes')
         self.model = config.get('model', 'auto-free')
 
     async def speak(
