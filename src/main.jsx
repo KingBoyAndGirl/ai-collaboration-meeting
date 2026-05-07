@@ -416,22 +416,22 @@ function App() {
       <header className="glass">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl shadow-lg">
-              🤖
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">AI 协作会议平台</h1>
-              <p className="text-sm text-white/70">人类当导演，AI当演员</p>
-            </div>
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+            AI
           </div>
-          <div className="flex items-center gap-4">
-            <button className="btn-glass text-sm">
-              帮助
-            </button>
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
-              U
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">AI 协作会议平台</h1>
+            <p className="text-sm text-white/70">人类当导演，AI当演员</p>
           </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="btn-glass text-sm">
+            帮助
+          </button>
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
+            👤
+          </div>
+        </div>
         </div>
       </header>
 
