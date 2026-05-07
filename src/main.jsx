@@ -576,6 +576,19 @@ function AgentForm({ agent, onSave, onCancel }) {
           </div>
         )}
         
+        {type === 'claude_code' && (
+          <div className="form-group">
+            <label className="form-label">Claude Code CLI 路径</label>
+            <input
+              type="text"
+              value={config.cli_path || ''}
+              onChange={e => setConfig({ ...config, cli_path: e.target.value })}
+              className="input"
+              placeholder="claude 或 /usr/local/bin/claude"
+            />
+          </div>
+        )}
+        
         {(type === 'claude_code' || type === 'openai' || type === 'custom') && (
           <div className="form-group">
             <label className="form-label">API 端点</label>

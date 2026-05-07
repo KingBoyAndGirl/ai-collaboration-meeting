@@ -19,6 +19,8 @@ class ClaudeCodeAdapter(BaseMeetingAgent):
         self.model = config.get('model', 'auto-free')  # AxonHub 默认模型
         self.timeout = config.get('timeout', 180)
         self.use_cli = config.get('use_cli', False)  # 默认使用 API 模式
+        # CLI 路径配置 - 支持自定义路径
+        self.cli_path = config.get('cli_path') or os.getenv('CLAUDE_CODE_PATH', 'claude')
     
     async def _call_axonhub(self, prompt: str) -> str:
         """通过 AxonHub 调用 Claude API"""
@@ -46,7 +48,7 @@ class ClaudeCodeAdapter(BaseMeetingAgent):
     
     async def _call_cli(self, prompt: str) -> str:
         """通过 CLI 调用 Claude Code (ACP 模式)"""
-        cmd = ["claude", "--acp", "--stdio"]
+        cmd = [self.cli_path, "--acp", "--stdio"]
         
         try:
             proc = await asyncio.create_subprocess_exec(
