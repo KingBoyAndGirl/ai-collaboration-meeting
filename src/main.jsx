@@ -538,7 +538,7 @@ function App() {
             </div>
 
             {/* 统计卡片 - 4列横向网格 */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)'}}>
               <StatCard icon="📋" label="场景总数" value={scenes.length} trend={8} />
               <StatCard icon="🎤" label="会议次数" value={47} trend={12} />
               <StatCard icon="💬" label="消息总数" value={384} trend={23} />
