@@ -447,8 +447,10 @@ function App() {
   }
 
   const handleStartMeeting = (scene) => {
+    console.log('handleStartMeeting called with scene:', scene?.name)
     setCurrentScene(scene)
     setShowMeeting(true)
+    console.log('setShowMeeting(true) called')
   }
 
   const handleEditScene = (scene) => {
