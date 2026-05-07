@@ -10,22 +10,15 @@ function Notification({ message, type, onClose }) {
   }, [])
 
   return (
-    <div className="notification">
-      <div className={`glass-card p-4 flex items-center gap-3 ${type === 'success' ? 'border-emerald-300' : 'border-blue-300'}`}>
-        <span className="text-2xl">{type === 'success' ? '✓' : 'ℹ'}</span>
-        <span className="font-medium">{message}</span>
+    <div className="fixed top-6 right-6 z-50 animate-slideUp">
+      <div className={`flex items-center gap-3 px-5 py-4 rounded-xl ${
+        type === 'success' 
+          ? 'bg-emerald-500/20 border border-emerald-500/30' 
+          : 'bg-blue-500/20 border border-blue-500/30'
+      }`}>
+        <span className="text-xl">{type === 'success' ? '✓' : 'ℹ'}</span>
+        <span className="font-medium text-white">{message}</span>
       </div>
-    </div>
-  )
-}
-
-// 加载动画
-function LoadingDots() {
-  return (
-    <div className="flex space-x-1">
-      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
     </div>
   )
 }
@@ -33,22 +26,22 @@ function LoadingDots() {
 // 导航组件
 function Navigation({ currentView, onViewChange }) {
   const navItems = [
-    { id: 'home', label: '首页', icon: '🏠', emoji: '✨' },
-    { id: 'scenes', label: '场景', icon: '📋', emoji: '🎯' },
-    { id: 'meetings', label: '会议', icon: '🎤', emoji: '🚀' },
-    { id: 'monitor', label: '监控', icon: '📊', emoji: '📈' },
+    { id: 'home', label: '首页', icon: '🏠' },
+    { id: 'scenes', label: '场景', icon: '📋' },
+    { id: 'meetings', label: '会议', icon: '🎤' },
+    { id: 'monitor', label: '监控', icon: '📊' },
   ]
 
   return (
-    <div className="glass mb-6 p-2 flex gap-2">
+    <div className="flex gap-2 p-1.5 dark-glass rounded-2xl mb-6">
       {navItems.map((item) => (
         <button
           key={item.id}
           onClick={() => onViewChange(item.id)}
-          className={`nav-btn flex-1 ${currentView === item.id ? 'active' : ''}`}
+          className={`nav-tab flex-1 justify-center ${currentView === item.id ? 'active' : ''}`}
         >
-          <span className="mr-2">{item.icon}</span>
-          {item.label}
+          <span>{item.icon}</span>
+          <span>{item.label}</span>
         </button>
       ))}
     </div>
@@ -56,7 +49,7 @@ function Navigation({ currentView, onViewChange }) {
 }
 
 // 统计卡片
-function StatCard({ icon, label, value, trend }) {
+function StatCard({ icon, label, value, trend, color }) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -65,17 +58,16 @@ function StatCard({ icon, label, value, trend }) {
   }, [value])
 
   return (
-    <div className="glass-card p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="stat-icon text-xl">{icon}</div>
-        <div className="text-sm text-gray-500">{label}</div>
-      </div>
-      <div className="flex items-end justify-between">
-        <div className="text-3xl font-bold text-gray-800">{count}</div>
-        <div className="text-emerald-600 text-sm font-medium flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
-          <span>↑</span> 环比{trend}%
+    <div className="stat-card">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`stat-icon ${color}`}>{icon}</div>
+        <div className="flex items-center gap-1 text-emerald-400 text-sm font-medium">
+          <span>↑</span>
+          <span>{trend}%</span>
         </div>
       </div>
+      <div className="text-3xl font-bold text-white mb-1">{count}</div>
+      <div className="text-sm text-white/50">{label}</div>
     </div>
   )
 }
@@ -83,12 +75,12 @@ function StatCard({ icon, label, value, trend }) {
 // 场景卡片
 function SceneCard({ scene, onStart, onEdit }) {
   return (
-    <div className="glass-card p-6 scene-card" onClick={() => onEdit(scene)}>
+    <div className="scene-card" onClick={() => onEdit(scene)}>
       <span className="scene-emoji">{scene.icon}</span>
-      <h3 className="text-lg font-semibold text-gray-800 mb-2">{scene.name}</h3>
-      <p className="text-sm text-gray-500 mb-4 line-clamp-2">{scene.description}</p>
+      <h3 className="text-lg font-semibold text-white mb-2">{scene.name}</h3>
+      <p className="text-sm text-white/50 mb-5 line-clamp-2">{scene.description}</p>
       <button
-        className="btn-primary text-sm w-full"
+        className="gradient-btn w-full text-sm"
         onClick={(e) => { e.stopPropagation(); onStart(scene); }}
       >
         开始会议 →
@@ -108,40 +100,39 @@ function SceneEditor({ scene, onSave, onCancel }) {
   ])
 
   return (
-    <div className="fixed inset-0 modal-overlay" onClick={onCancel}>
-      <div className="glass w-full max-w-3xl mx-4 p-8 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <h2 className="text-2xl font-bold text-white mb-6">
           {scene ? '编辑场景' : '新建场景'}
         </h2>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">场景名称</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">场景名称</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="dark-input"
               placeholder="例：代码开发、产品设计、技术评审"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">场景描述</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">场景描述</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              rows={3}
+              className="dark-input min-h-[100px] resize-none"
               placeholder="描述这个场景的目的和流程"
             />
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-4">
-              <label className="text-sm font-medium text-gray-700">Agent 配置</label>
+              <label className="text-sm font-medium text-white/70">Agent 配置</label>
               <button
-                className="btn-glass text-sm"
+                className="glass-btn text-sm"
                 onClick={() => setAgents([...agents, { role: '', model: 'claude-sonnet-4', prompt: '' }])}
               >
                 + 添加 Agent
@@ -150,7 +141,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
 
             <div className="space-y-4">
               {agents.map((agent, i) => (
-                <div key={i} className="glass-card p-4">
+                <div key={i} className="dark-card p-4">
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <input
                       type="text"
@@ -160,7 +151,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
                         newAgents[i].role = e.target.value
                         setAgents(newAgents)
                       }}
-                      className="px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                      className="dark-input"
                       placeholder="角色名称"
                     />
                     <select
@@ -170,7 +161,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
                         newAgents[i].model = e.target.value
                         setAgents(newAgents)
                       }}
-                      className="px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                      className="dark-input"
                     >
                       <option value="claude-opus-4">Claude Opus</option>
                       <option value="claude-sonnet-4">Claude Sonnet</option>
@@ -186,7 +177,7 @@ function SceneEditor({ scene, onSave, onCancel }) {
                       newAgents[i].prompt = e.target.value
                       setAgents(newAgents)
                     }}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
+                    className="dark-input"
                     placeholder="角色提示词"
                   />
                 </div>
@@ -196,9 +187,9 @@ function SceneEditor({ scene, onSave, onCancel }) {
         </div>
 
         <div className="flex justify-end gap-4 mt-8">
-          <button className="btn-glass" onClick={onCancel}>取消</button>
+          <button className="glass-btn" onClick={onCancel}>取消</button>
           <button
-            className="btn-primary"
+            className="gradient-btn"
             onClick={() => onSave({ ...scene, name, description, agents })}
           >
             保存场景
@@ -217,14 +208,11 @@ function MeetingHall({ scene, onComplete }) {
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
-    // 模拟会议流程
     const startMeeting = async () => {
       setStatus('preparing')
-      await new Promise(r => setTimeout(r, 1000))
-
+      await new Promise(r => setTimeout(r, 1500))
       setStatus('running')
 
-      // 模拟 Agent 发言
       const agents = scene?.agents || [
         { role: '产品经理', model: 'claude-opus-4' },
         { role: '架构师', model: 'claude-opus-4' },
@@ -233,11 +221,12 @@ function MeetingHall({ scene, onComplete }) {
 
       for (const agent of agents) {
         setCurrentAgent(agent)
-        await new Promise(r => setTimeout(r, 1500))
+        await new Promise(r => setTimeout(r, 2000))
 
         setMessages(prev => [...prev, {
           id: Date.now(),
           role: agent.role,
+          model: agent.model,
           content: `我是${agent.role}，使用 ${agent.model}。我正在分析需求并准备提出建议...`,
           timestamp: new Date()
         }])
@@ -254,53 +243,58 @@ function MeetingHall({ scene, onComplete }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const avatarColors = {
+    '产品经理': 'bg-purple-500/30 text-purple-300',
+    '架构师': 'bg-cyan-500/30 text-cyan-300',
+    '开发者': 'bg-emerald-500/30 text-emerald-300'
+  }
+
   return (
-    <div className="fixed inset-0 modal-overlay" onClick={onComplete}>
-      <div className="glass w-full max-w-4xl mx-4 h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onComplete}>
+      <div className="modal-content max-w-4xl" onClick={e => e.stopPropagation()}>
         {/* 头部 */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">会议进行中</h2>
-              <p className="text-sm text-gray-500">{scene?.name || '代码开发'} - {status === 'running' ? '讨论中' : status === 'preparing' ? '准备中' : '待审核'}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {status === 'running' && (
-                <div className="flex items-center gap-2 text-indigo-600">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium">{currentAgent?.role} 发言中...</span>
-                </div>
-              )}
-              <button className="btn-glass text-sm" onClick={onComplete}>结束会议</button>
-            </div>
+        <div className="flex justify-between items-center mb-6 pb-6 border-b border-white/10">
+          <div>
+            <h2 className="text-xl font-bold text-white">会议进行中</h2>
+            <p className="text-sm text-white/50 mt-1">
+              {scene?.name || '代码开发'} · {status === 'running' ? '讨论中' : status === 'preparing' ? '准备中' : '待审核'}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {status === 'running' && currentAgent && (
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <div className="status-dot active"></div>
+                <span>{currentAgent.role} 发言中...</span>
+              </div>
+            )}
+            <button className="glass-btn text-sm" onClick={onComplete}>结束会议</button>
           </div>
         </div>
 
         {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto mb-6">
           {messages.length === 0 && status === 'preparing' && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <LoadingDots />
-                <p className="mt-4 text-gray-500">正在准备会议环境...</p>
-              </div>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-white/50">正在准备会议环境...</p>
             </div>
           )}
 
           {messages.map(msg => (
-            <div key={msg.id} className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+            <div key={msg.id} className="flex gap-4 animate-fadeIn">
+              <div className={`message-avatar ${avatarColors[msg.role] || 'bg-white/10 text-white/70'}`}>
                 {msg.role[0]}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-gray-800">{msg.role}</span>
-                  <span className="text-xs text-gray-400">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-medium text-white">{msg.role}</span>
+                  <span className="badge badge-purple text-xs">{msg.model}</span>
+                  <span className="text-xs text-white/30">
                     {msg.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
-                <div className="glass-card p-4">
-                  <p className="text-gray-700">{msg.content}</p>
+                <div className="message-bubble">
+                  <p className="text-white/80">{msg.content}</p>
                 </div>
               </div>
             </div>
@@ -310,16 +304,14 @@ function MeetingHall({ scene, onComplete }) {
 
         {/* 底部 */}
         {status === 'review' && (
-          <div className="p-6 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <span className="text-xl">✓</span>
-                <span className="font-medium">会议讨论完成</span>
-              </div>
-              <div className="flex gap-3">
-                <button className="btn-glass">导出记录</button>
-                <button className="btn-primary">审核结果</button>
-              </div>
+          <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-emerald-400">
+              <span className="text-xl">✓</span>
+              <span className="font-medium">会议讨论完成</span>
+            </div>
+            <div className="flex gap-3">
+              <button className="glass-btn">导出记录</button>
+              <button className="gradient-btn">审核结果</button>
             </div>
           </div>
         )}
@@ -334,7 +326,6 @@ function MonitorPanel() {
     cpu: 45,
     memory: 62,
     requests: 128,
-    errors: 2,
     tokens: 45000,
     cost: 12.5
   })
@@ -348,52 +339,61 @@ function MonitorPanel() {
         requests: prev.requests + Math.floor(Math.random() * 5)
       }))
     }, 3000)
-
     return () => clearInterval(interval)
   }, [])
 
+  const services = [
+    { name: 'API 服务', status: 'healthy', latency: '45ms' },
+    { name: 'Claude 接口', status: 'healthy', latency: '1.2s' },
+    { name: '数据库', status: 'healthy', latency: '12ms' },
+    { name: '消息队列', status: 'warning', latency: '250ms' }
+  ]
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">系统监控</h2>
-        <span className="text-sm text-white/70">每 3 秒自动刷新</span>
-      </div>
+    <div className="space-y-6 animate-fadeIn">
+      <h2 className="text-2xl font-bold text-white">系统监控</h2>
 
       {/* 概览卡片 */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="glass-card p-6 text-center">
-          <div className="text-4xl font-bold text-indigo-600">{metrics.requests}</div>
-          <div className="text-sm text-gray-500 mt-1">今日请求数</div>
+        <div className="stat-card text-center">
+          <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            {metrics.requests}
+          </div>
+          <div className="text-sm text-white/50 mt-2">今日请求数</div>
         </div>
-        <div className="glass-card p-6 text-center">
-          <div className="text-4xl font-bold text-emerald-600">{metrics.tokens.toLocaleString()}</div>
-          <div className="text-sm text-gray-500 mt-1">消耗 Tokens</div>
+        <div className="stat-card text-center">
+          <div className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+            {metrics.tokens.toLocaleString()}
+          </div>
+          <div className="text-sm text-white/50 mt-2">消耗 Tokens</div>
         </div>
-        <div className="glass-card p-6 text-center">
-          <div className="text-4xl font-bold text-amber-600">${metrics.cost.toFixed(2)}</div>
-          <div className="text-sm text-gray-500 mt-1">预计费用</div>
+        <div className="stat-card text-center">
+          <div className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+            ${metrics.cost.toFixed(2)}
+          </div>
+          <div className="text-sm text-white/50 mt-2">预计费用</div>
         </div>
       </div>
 
       {/* 资源使用 */}
-      <div className="glass-card p-6">
-        <h3 className="font-semibold text-gray-800 mb-4">资源使用</h3>
-        <div className="space-y-4">
+      <div className="dark-glass p-6">
+        <h3 className="font-semibold text-white mb-5">资源使用</h3>
+        <div className="space-y-5">
           <div>
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600">CPU 使用率</span>
-              <span className="font-medium">{metrics.cpu.toFixed(1)}%</span>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-white/60">CPU 使用率</span>
+              <span className="text-white font-medium">{metrics.cpu.toFixed(1)}%</span>
             </div>
-            <div className="progress-bar">
+            <div className="progress-track">
               <div className="progress-fill" style={{ width: `${metrics.cpu}%` }} />
             </div>
           </div>
           <div>
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600">内存使用率</span>
-              <span className="font-medium">{metrics.memory.toFixed(1)}%</span>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-white/60">内存使用率</span>
+              <span className="text-white font-medium">{metrics.memory.toFixed(1)}%</span>
             </div>
-            <div className="progress-bar">
+            <div className="progress-track">
               <div className="progress-fill" style={{ width: `${metrics.memory}%` }} />
             </div>
           </div>
@@ -401,23 +401,16 @@ function MonitorPanel() {
       </div>
 
       {/* 服务状态 */}
-      <div className="glass-card p-6">
-        <h3 className="font-semibold text-gray-800 mb-4">服务状态</h3>
-        <div className="space-y-3">
-          {[
-            { name: 'API 服务', status: 'healthy', latency: '45ms' },
-            { name: 'Claude 接口', status: 'healthy', latency: '1.2s' },
-            { name: '数据库', status: 'healthy', latency: '12ms' },
-            { name: '消息队列', status: 'warning', latency: '250ms' }
-          ].map((svc, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+      <div className="dark-glass p-6">
+        <h3 className="font-semibold text-white mb-5">服务状态</h3>
+        <div className="space-y-4">
+          {services.map((svc, i) => (
+            <div key={i} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
               <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  svc.status === 'healthy' ? 'bg-emerald-500' : 'bg-amber-500'
-                }`} />
-                <span className="text-gray-700">{svc.name}</span>
+                <div className={`status-dot ${svc.status === 'healthy' ? 'active' : 'warning'}`} />
+                <span className="text-white/80">{svc.name}</span>
               </div>
-              <span className="text-sm text-gray-500">{svc.latency}</span>
+              <span className="text-sm text-white/40">{svc.latency}</span>
             </div>
           ))}
         </div>
@@ -484,46 +477,39 @@ function App() {
         />
       )}
 
-      {/* 头部 */}
-      <header className="glass mb-8 mx-4 mt-4">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+      <div className="dark-container">
+        {/* 头部 */}
+        <header className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
               AI
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">AI 协作会议平台</h1>
-              <p className="text-sm text-gray-500">人类当导演，AI当演员</p>
+              <h1 className="text-xl font-bold text-white">AI 协作会议平台</h1>
+              <p className="text-sm text-white/40">人类当导演，AI当演员</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="btn-glass text-sm">
-              帮助
-            </button>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+          <div className="flex items-center gap-3">
+            <button className="glass-btn text-sm">帮助</button>
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-xl flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform">
               👤
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* 导航 */}
-      <div className="container mx-auto px-4">
-        <Navigation
-          currentView={currentView}
-          onViewChange={setCurrentView}
-        />
+        {/* 导航 */}
+        <Navigation currentView={currentView} onViewChange={setCurrentView} />
 
         {/* 首页 */}
         {currentView === 'home' && (
-          <div className="animate-fadeInUp">
+          <div className="animate-fadeIn">
             {/* 欢迎区 */}
-            <div className="glass p-8 mb-6">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">欢迎回来 👋</h2>
-              <p className="text-gray-600 mb-6">准备好开始今天的 AI 协作了吗？</p>
+            <div className="dark-glass p-8 mb-6">
+              <h2 className="text-3xl font-bold text-white mb-2">欢迎回来 👋</h2>
+              <p className="text-white/50 mb-6">准备好开始今天的 AI 协作了吗？</p>
               <div className="flex gap-4">
                 <button
-                  className="btn-primary"
+                  className="gradient-btn"
                   onClick={() => {
                     setCurrentScene(null)
                     setShowSceneEditor(true)
@@ -531,24 +517,24 @@ function App() {
                 >
                   ✨ 开始新会议
                 </button>
-                <button className="btn-glass">
+                <button className="glass-btn">
                   📖 查看文档
                 </button>
               </div>
             </div>
 
-            {/* 统计卡片 - 4列横向网格 */}
-            <div className="grid grid-cols-4 gap-4 mb-6" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)'}}>
-              <StatCard icon="📋" label="场景总数" value={scenes.length} trend={8} />
-              <StatCard icon="🎤" label="会议次数" value={47} trend={12} />
-              <StatCard icon="💬" label="消息总数" value={384} trend={23} />
-              <StatCard icon="🤖" label="Agent 调用" value={156} trend={15} />
+            {/* 统计卡片 */}
+            <div className="grid grid-cols-4 gap-4 mb-6 stat-grid">
+              <StatCard icon="📋" label="场景总数" value={scenes.length} trend={8} color="purple" />
+              <StatCard icon="🎤" label="会议次数" value={47} trend={12} color="pink" />
+              <StatCard icon="💬" label="消息总数" value={384} trend={23} color="cyan" />
+              <StatCard icon="🤖" label="Agent 调用" value={156} trend={15} color="amber" />
             </div>
 
             {/* 最近场景 */}
-            <div className="glass p-6">
-              <h3 className="section-title text-lg">最近使用的场景</h3>
-              <div className="grid grid-cols-3 gap-4">
+            <div className="dark-glass p-6">
+              <h3 className="text-lg font-semibold text-white mb-5">最近使用的场景</h3>
+              <div className="grid grid-cols-3 gap-4 scene-grid">
                 {scenes.map(scene => (
                   <SceneCard
                     key={scene.id}
@@ -564,11 +550,11 @@ function App() {
 
         {/* 场景列表 */}
         {currentView === 'scenes' && (
-          <div className="animate-fadeInUp">
+          <div className="animate-fadeIn">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white">场景管理</h2>
               <button
-                className="btn-primary"
+                className="gradient-btn"
                 onClick={() => {
                   setCurrentScene(null)
                   setShowSceneEditor(true)
@@ -578,7 +564,7 @@ function App() {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 scene-grid">
               {scenes.map(scene => (
                 <SceneCard
                   key={scene.id}
@@ -593,22 +579,17 @@ function App() {
 
         {/* 会议列表 */}
         {currentView === 'meetings' && (
-          <div className="animate-fadeInUp">
+          <div className="animate-fadeIn">
             <h2 className="text-2xl font-bold text-white mb-6">会议记录</h2>
-            <div className="glass p-6">
-              <p className="text-gray-500 text-center py-8">
-                暂无会议记录，开始第一次会议吧 👆
-              </p>
+            <div className="dark-glass p-8 text-center">
+              <div className="text-6xl mb-4">📝</div>
+              <p className="text-white/50">暂无会议记录，开始第一次会议吧</p>
             </div>
           </div>
         )}
 
         {/* 监控面板 */}
-        {currentView === 'monitor' && (
-          <div className="animate-fadeInUp">
-            <MonitorPanel />
-          </div>
-        )}
+        {currentView === 'monitor' && <MonitorPanel />}
       </div>
 
       {/* 场景编辑器弹窗 */}
