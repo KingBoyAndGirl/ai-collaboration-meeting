@@ -13,7 +13,8 @@ class ClaudeCodeAdapter(BaseMeetingAgent):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key') or os.getenv('ANTHROPIC_API_KEY')
-        self.axonhub_key = config.get('axonhub_key') or os.getenv('AXONHUB_API_KEY', 'ah-ed512094f2da8fadd186b58e26d18d132b747d4dfc47ea3ee09da3f0f928cd88')
+        # prodbox 使用自己的 AxonHub 密钥
+        self.axonhub_key = config.get('axonhub_key') or os.getenv('AXONHUB_API_KEY', 'ah-a4b65c0ba15418661976745985401a3186233e7f3ee2d1379f556cceac07b64c')
         self.axonhub_url = config.get('axonhub_url', 'https://axonhub.nasw.heiyu.space/v1')
         self.model = config.get('model', 'claude-sonnet-4-20250514')
         self.timeout = config.get('timeout', 180)
