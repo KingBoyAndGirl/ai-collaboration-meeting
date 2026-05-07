@@ -81,19 +81,21 @@ function StatCard({ icon, label, value, trend, color }) {
   }, [value])
 
   return (
-    <div className="glass-card p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-2xl">{icon}</span>
-        {trend && (
-          <span className={`text-xs px-2 py-1 rounded-full ${
-            trend > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
-          }`}>
-            {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-          </span>
-        )}
+    <div className="glass-card p-5 flex items-center gap-4">
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-2xl">
+        {icon}
       </div>
-      <div className="text-2xl font-bold mb-1">{count}</div>
-      <div className="text-sm text-gray-500">{label}</div>
+      <div className="flex-1">
+        <div className="text-2xl font-bold">{count.toLocaleString()}</div>
+        <div className="text-sm text-gray-500">{label}</div>
+      </div>
+      {trend && (
+        <span className={`text-xs px-2 py-1 rounded-full ${
+          trend > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+        }`}>
+          {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+        </span>
+      )}
     </div>
   )
 }
@@ -426,7 +428,7 @@ function App() {
             <button className="btn-glass text-sm">
               帮助
             </button>
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
               U
             </div>
           </div>
