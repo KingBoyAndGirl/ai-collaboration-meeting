@@ -28,6 +28,7 @@ function Navigation({ currentView, onViewChange }) {
   const navItems = [
     { id: 'home', label: '首页', icon: '🏠' },
     { id: 'scenes', label: '场景', icon: '📋' },
+    { id: 'agents', label: 'Agent', icon: '🤖' },
     { id: 'meetings', label: '会议', icon: '🎤' },
     { id: 'monitor', label: '监控', icon: '📊' },
   ]
@@ -235,6 +236,234 @@ function SceneEditor({ scene, onSave, onCancel }) {
           >
             保存场景
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Agent 管理页面
+function AgentManager({ agents, onAdd, onUpdate, onDelete }) {
+  const [editingAgent, setEditingAgent] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  
+  const defaultAgents = [
+    { id: 'hermes', name: 'Hermes Agent', type: 'hermes', description: '本地 Hermes Agent，项目经理角色', status: 'active', config: { path: '/home/prodbox/.local/bin/hermes', model: 'auto-free' } },
+    { id: 'claude_code', name: 'Claude Code', type: 'claude_code', description: '通过 AxonHub 调用 Claude', status: 'active', config: { axonhub_url: 'https://axonhub.nasw.heiyu.space/v1', model: 'auto-free' } },
+    { id: 'openai', name: 'OpenAI', type: 'openai', description: '通过 AxonHub 调用 GPT 系列', status: 'active', config: { axonhub_url: 'https://axonhub.nasw.heiyu.space/v1', model: 'gpt-4o' } },
+  ]
+  
+  const allAgents = [...defaultAgents, ...(agents || [])]
+  
+  const handleSave = (agent) => {
+    if (editingAgent) {
+      onUpdate(agent)
+    } else {
+      onAdd(agent)
+    }
+    setShowForm(false)
+    setEditingAgent(null)
+  }
+  
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-white">🤖 Agent 管理</h2>
+        <button
+          className="gradient-btn"
+          onClick={() => { setEditingAgent(null); setShowForm(true) }}
+        >
+          + 添加 Agent
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {allAgents.map((agent) => (
+          <div key={agent.id} className="dark-card p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${
+                  agent.type === 'hermes' ? 'bg-purple-500/20' : 
+                  agent.type === 'claude_code' ? 'bg-orange-500/20' : 'bg-green-500/20'
+                }`}>
+                  {agent.type === 'hermes' ? '🤖' : agent.type === 'claude_code' ? '💻' : '🔌'}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    agent.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {agent.status === 'active' ? '运行中' : '已禁用'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-white/60 mb-4">{agent.description}</p>
+            
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-white/50">类型</span>
+                <span className="text-white">{agent.type}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-white/50">模型</span>
+                <span className="text-white">{agent.config?.model || '默认'}</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                className="glass-btn flex-1 text-sm"
+                onClick={() => { setEditingAgent(agent); setShowForm(true) }}
+              >
+                编辑
+              </button>
+              {agent.type === 'hermes' || agent.type === 'claude_code' || agent.type === 'openai' ? (
+                <button className="glass-btn text-sm opacity-50 cursor-not-allowed" disabled>
+                  内置
+                </button>
+              ) : (
+                <button
+                  className="glass-btn text-sm text-red-400 hover:bg-red-500/20"
+                  onClick={() => onDelete(agent.id)}
+                >
+                  删除
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Agent 编辑弹窗 */}
+      {showForm && (
+        <AgentForm
+          agent={editingAgent}
+          onSave={handleSave}
+          onCancel={() => { setShowForm(false); setEditingAgent(null) }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Agent 表单组件
+function AgentForm({ agent, onSave, onCancel }) {
+  const [name, setName] = useState(agent?.name || '')
+  const [type, setType] = useState(agent?.type || 'hermes')
+  const [description, setDescription] = useState(agent?.description || '')
+  const [config, setConfig] = useState(agent?.config || { model: 'auto-free' })
+  
+  const agentTypes = [
+    { value: 'hermes', label: 'Hermes Agent', icon: '🤖' },
+    { value: 'claude_code', label: 'Claude Code', icon: '💻' },
+    { value: 'openai', label: 'OpenAI', icon: '🔌' },
+    { value: 'custom', label: '自定义', icon: '⚙️' },
+  ]
+  
+  const handleSubmit = () => {
+    onSave({
+      id: agent?.id || `agent_${Date.now()}`,
+      name,
+      type,
+      description,
+      status: 'active',
+      config
+    })
+  }
+  
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <h2 className="text-2xl font-bold text-white mb-6">
+          {agent ? '编辑 Agent' : '添加 Agent'}
+        </h2>
+        
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-2">Agent 名称</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="dark-input"
+              placeholder="例：我的 Hermes Agent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-2">Agent 类型</label>
+            <div className="grid grid-cols-2 gap-3">
+              {agentTypes.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setType(t.value)}
+                  className={`p-3 rounded-xl border transition-all ${
+                    type === t.value
+                      ? 'bg-purple-500/30 border-purple-500/50'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-xl mr-2">{t.icon}</span>
+                  <span className="text-white text-sm">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-2">描述</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              className="dark-input min-h-[80px] resize-none"
+              placeholder="描述这个 Agent 的用途"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-2">默认模型</label>
+            <input
+              type="text"
+              value={config.model || ''}
+              onChange={e => setConfig({ ...config, model: e.target.value })}
+              className="dark-input"
+              placeholder="例：auto-free, claude-sonnet-4"
+            />
+          </div>
+          
+          {type === 'hermes' && (
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">Hermes 路径</label>
+              <input
+                type="text"
+                value={config.path || ''}
+                onChange={e => setConfig({ ...config, path: e.target.value })}
+                className="dark-input"
+                placeholder="/usr/local/bin/hermes"
+              />
+            </div>
+          )}
+          
+          {(type === 'claude_code' || type === 'openai' || type === 'custom') && (
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">API 端点</label>
+              <input
+                type="text"
+                value={config.axonhub_url || config.api_url || ''}
+                onChange={e => setConfig({ ...config, axonhub_url: e.target.value })}
+                className="dark-input"
+                placeholder="https://api.example.com/v1"
+              />
+            </div>
+          )}
+          
+          <div className="flex gap-3 pt-4">
+            <button className="glass-btn flex-1" onClick={onCancel}>取消</button>
+            <button className="gradient-btn flex-1" onClick={handleSubmit}>保存</button>
+          </div>
         </div>
       </div>
     </div>
@@ -467,6 +696,7 @@ function App() {
   const [showSceneEditor, setShowSceneEditor] = useState(false)
   const [showMeeting, setShowMeeting] = useState(false)
   const [currentScene, setCurrentScene] = useState(null)
+  const [agents, setAgents] = useState([])
   const [scenes, setScenes] = useState([
     { id: 1, name: '代码开发', icon: '💻', description: '需求分析 → 架构设计 → 代码实现 → 测试验证', agents: [
       { role: '产品经理', model: 'claude-opus-4', prompt: '负责需求分析和功能定义' },
@@ -516,6 +746,24 @@ function App() {
     console.log('Cancel clicked')
     setShowSceneEditor(false)
   }, [])
+
+  // Agent CRUD 处理函数
+  const handleAddAgent = (agentData) => {
+    setAgents(prev => [...prev, { ...agentData, id: `agent_${Date.now()}` }])
+    showNotification('Agent 已添加')
+  }
+
+  const handleUpdateAgent = (agentData) => {
+    setAgents(prev => prev.map(a => a.id === agentData.id ? agentData : a))
+    showNotification('Agent 已更新')
+  }
+
+  const handleDeleteAgent = (agentId) => {
+    if (confirm('确定删除这个 Agent？')) {
+      setAgents(prev => prev.filter(a => a.id !== agentId))
+      showNotification('Agent 已删除')
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -625,6 +873,18 @@ function App() {
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Agent 管理 */}
+        {currentView === 'agents' && (
+          <div className="animate-fadeIn">
+            <AgentManager
+              agents={agents}
+              onAdd={handleAddAgent}
+              onUpdate={handleUpdateAgent}
+              onDelete={handleDeleteAgent}
+            />
           </div>
         )}
 
