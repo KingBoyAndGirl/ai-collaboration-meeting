@@ -2,6 +2,80 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 
+// 主题管理 Hook
+function useTheme() {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme')
+    return saved || 'system'
+  })
+
+  useEffect(() => {
+    const applyTheme = (t) => {
+      if (t === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
+      } else {
+        document.documentElement.setAttribute('data-theme', t)
+      }
+    }
+
+    applyTheme(theme)
+    localStorage.setItem('theme', theme)
+
+    // 监听系统主题变化
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = () => {
+      if (theme === 'system') {
+        applyTheme('system')
+      }
+    }
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, [theme])
+
+  return [theme, setTheme]
+}
+
+// 主题切换组件
+function ThemeToggle({ theme, setTheme }) {
+  const [showDropdown, setShowDropdown] = useState(false)
+  
+  const themes = [
+    { value: 'light', label: '日间', icon: '☀️' },
+    { value: 'dark', label: '夜间', icon: '🌙' },
+    { value: 'system', label: '跟随系统', icon: '💻' },
+  ]
+
+  const currentTheme = themes.find(t => t.value === theme) || themes[2]
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        className="theme-toggle-btn"
+        onClick={() => setShowDropdown(!showDropdown)}
+        title="切换主题"
+      >
+        {currentTheme.icon}
+      </button>
+      
+      {showDropdown && (
+        <div className="theme-dropdown">
+          {themes.map((t) => (
+            <button
+              key={t.value}
+              className={`theme-option ${theme === t.value ? 'active' : ''}`}
+              onClick={() => { setTheme(t.value); setShowDropdown(false) }}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // 通知组件
 function Notification({ message, type, onClose }) {
   useEffect(() => {
@@ -18,7 +92,7 @@ function Notification({ message, type, onClose }) {
 }
 
 // 顶部导航
-function TopNav({ currentView, onViewChange }) {
+function TopNav({ currentView, onViewChange, theme, setTheme }) {
   const navItems = [
     { id: 'home', label: '首页', icon: '🏠' },
     { id: 'scenes', label: '场景', icon: '📋' },
@@ -49,6 +123,7 @@ function TopNav({ currentView, onViewChange }) {
         </div>
         
         <div className="nav-right">
+          <ThemeToggle theme={theme} setTheme={setTheme} />
           <div className="nav-avatar">👤</div>
         </div>
       </div>
@@ -632,6 +707,7 @@ function MonitorPanel() {
 
 // 主应用
 function App() {
+  const [theme, setTheme] = useTheme()
   const [currentView, setCurrentView] = useState('home')
   const [notification, setNotification] = useState(null)
   const [showSceneEditor, setShowSceneEditor] = useState(false)
@@ -704,7 +780,7 @@ function App() {
 
   return (
     <div>
-      <TopNav currentView={currentView} onViewChange={setCurrentView} />
+      <TopNav currentView={currentView} onViewChange={setCurrentView} theme={theme} setTheme={setTheme} />
       
       {notification && (
         <Notification
