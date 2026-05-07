@@ -348,10 +348,10 @@ function AgentForm({ agent, onSave, onCancel }) {
   const [config, setConfig] = useState(agent?.config || { model: 'auto-free' })
   
   const agentTypes = [
-    { value: 'hermes', label: 'Hermes Agent', icon: '🤖' },
-    { value: 'claude_code', label: 'Claude Code', icon: '💻' },
-    { value: 'openai', label: 'OpenAI', icon: '🔌' },
-    { value: 'custom', label: '自定义', icon: '⚙️' },
+    { value: 'hermes', label: 'Hermes Agent', icon: '🤖', color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)' },
+    { value: 'claude_code', label: 'Claude Code', icon: '💻', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)' },
+    { value: 'openai', label: 'OpenAI', icon: '🔌', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)' },
+    { value: 'custom', label: '自定义', icon: '⚙️', color: '#6366f1', bgColor: 'rgba(99, 102, 241, 0.15)' },
   ]
   
   const handleSubmit = () => {
@@ -392,9 +392,19 @@ function AgentForm({ agent, onSave, onCancel }) {
                 type="button"
                 onClick={() => setType(t.value)}
                 className={`type-option ${type === t.value ? 'selected' : ''}`}
+                style={{
+                  borderColor: type === t.value ? t.color : undefined,
+                  background: type === t.value ? t.bgColor : undefined,
+                  boxShadow: type === t.value ? `0 0 0 1px ${t.color}` : undefined
+                }}
               >
-                <span className="type-option-icon">{t.icon}</span>
-                <span className="type-option-label">{t.label}</span>
+                <span className="type-option-icon" style={{ 
+                  background: t.bgColor,
+                  borderRadius: '8px',
+                  padding: '8px',
+                  fontSize: '20px'
+                }}>{t.icon}</span>
+                <span className="type-option-label" style={{ color: type === t.value ? t.color : 'var(--text-primary)' }}>{t.label}</span>
               </button>
             ))}
           </div>
