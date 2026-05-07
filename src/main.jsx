@@ -462,6 +462,7 @@ function AgentForm({ agent, onSave, onCancel }) {
   const [type, setType] = useState(agent?.type || 'hermes')
   const [description, setDescription] = useState(agent?.description || '')
   const [config, setConfig] = useState(agent?.config || { model: 'auto-free' })
+  const [errors, setErrors] = useState({})
   
   const agentTypes = [
     { value: 'hermes', label: 'Hermes Agent', icon: '🤖', color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)' },
@@ -470,9 +471,18 @@ function AgentForm({ agent, onSave, onCancel }) {
     { value: 'custom', label: '自定义', icon: '⚙️', color: '#6366f1', bgColor: 'rgba(99, 102, 241, 0.15)' },
   ]
   
+  const validate = () => {
+    const newErrors = {}
+    if (!name.trim()) newErrors.name = 'Agent 名称为必填项'
+    if (!type) newErrors.type = '请选择 Agent 类型'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+  
   const handleSubmit = () => {
+    if (!validate()) return
     onSave({
-      id: agent?.id || `agent_${Date.now()}`,
+      id: agent?.id,
       name,
       type,
       description,
@@ -489,24 +499,29 @@ function AgentForm({ agent, onSave, onCancel }) {
         </h2>
         
         <div className="form-group">
-          <label className="form-label">Agent 名称</label>
+          <label className="form-label">
+            Agent 名称 <span style={{ color: 'var(--danger)' }}>*</span>
+          </label>
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
-            className="input"
+            onChange={e => { setName(e.target.value); setErrors(prev => ({ ...prev, name: null })) }}
+            className={`input ${errors.name ? 'input-error' : ''}`}
             placeholder="例：我的 Hermes Agent"
           />
+          {errors.name && <span className="form-error">{errors.name}</span>}
         </div>
         
         <div className="form-group">
-          <label className="form-label">Agent 类型</label>
+          <label className="form-label">
+            Agent 类型 <span style={{ color: 'var(--danger)' }}>*</span>
+          </label>
           <div className="type-selector">
             {agentTypes.map((t) => (
               <button
                 key={t.value}
                 type="button"
-                onClick={() => setType(t.value)}
+                onClick={() => { setType(t.value); setErrors(prev => ({ ...prev, type: null })) }}
                 className={`type-option ${type === t.value ? 'selected' : ''}`}
                 style={{
                   borderColor: type === t.value ? t.color : undefined,
@@ -524,6 +539,7 @@ function AgentForm({ agent, onSave, onCancel }) {
               </button>
             ))}
           </div>
+          {errors.type && <span className="form-error">{errors.type}</span>}
         </div>
         
         <div className="form-group">
@@ -747,6 +763,10 @@ function MonitorPanel() {
 }
 
 // 主应用
+const API_BASE = window.location.origin.includes('localhost') 
+  ? 'http://localhost:18602' 
+  : `${window.location.protocol}//${window.location.hostname}`;
+
 function App() {
   const [theme, setTheme] = useTheme()
   const [currentView, setCurrentView] = useState('home')
@@ -755,21 +775,30 @@ function App() {
   const [showMeeting, setShowMeeting] = useState(false)
   const [currentScene, setCurrentScene] = useState(null)
   const [agents, setAgents] = useState([])
-  const [scenes, setScenes] = useState([
-    { id: 1, name: '代码开发', icon: '💻', description: '需求分析 → 架构设计 → 代码实现 → 测试验证', agents: [
-      { role: '产品经理', model: 'claude-opus-4', prompt: '负责需求分析和功能定义' },
-      { role: '架构师', model: 'claude-opus-4', prompt: '负责技术架构设计' },
-      { role: '开发者', model: 'claude-sonnet-4', prompt: '负责代码实现' }
-    ]},
-    { id: 2, name: '内容创作', icon: '✍️', description: '选题策划 → 大纲生成 → 内容撰写 → 审核发布', agents: [
-      { role: '策划编辑', model: 'claude-opus-4', prompt: '负责选题和大纲' },
-      { role: '内容作者', model: 'claude-sonnet-4', prompt: '负责内容撰写' }
-    ]},
-    { id: 3, name: '商业分析', icon: '📊', description: '数据收集 → 市场分析 → 竞品研究 → 报告生成', agents: [
-      { role: '数据分析师', model: 'claude-opus-4', prompt: '负责数据收集和分析' },
-      { role: '行业专家', model: 'gpt-4o', prompt: '负责行业洞察' }
-    ]}
-  ])
+  const [scenes, setScenes] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // 从 API 加载数据
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [scenesRes, agentsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/scenes`),
+          fetch(`${API_BASE}/api/agents`)
+        ])
+        const scenesData = await scenesRes.json()
+        const agentsData = await agentsRes.json()
+        setScenes(scenesData.items || [])
+        setAgents(agentsData.items || [])
+      } catch (err) {
+        console.error('加载数据失败:', err)
+        showNotification('加载数据失败', 'error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type })
@@ -785,44 +814,125 @@ function App() {
     setShowSceneEditor(true)
   }
 
-  const handleSaveScene = (sceneData) => {
-    if (sceneData.id) {
-      setScenes(prev => prev.map(s => s.id === sceneData.id ? sceneData : s))
-    } else {
-      const defaultIcons = ['💡', '🎯', '🚀', '📱', '🏠', '⚙️', '🔧', '📊', '🎨', '💼']
-      const icon = sceneData.icon || defaultIcons[Math.floor(Math.random() * defaultIcons.length)]
-      setScenes(prev => [...prev, { ...sceneData, icon, id: Date.now() }])
+  const handleSaveScene = async (sceneData) => {
+    try {
+      const isUpdate = !!sceneData.id
+      const url = isUpdate ? `${API_BASE}/api/scenes/${sceneData.id}` : `${API_BASE}/api/scenes`
+      const method = isUpdate ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sceneData.name,
+          description: sceneData.description || '',
+          icon: sceneData.icon || '💡',
+          agents: sceneData.agents || []
+        })
+      })
+      
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || '保存失败')
+      }
+      
+      const saved = await res.json()
+      
+      if (isUpdate) {
+        setScenes(prev => prev.map(s => s.id === saved.id ? saved : s))
+      } else {
+        setScenes(prev => [saved, ...prev])
+      }
+      
+      setShowSceneEditor(false)
+      showNotification('场景已保存')
+    } catch (err) {
+      showNotification(err.message, 'error')
     }
-    setShowSceneEditor(false)
-    showNotification('场景已保存')
   }
 
   const handleCancelScene = useCallback(() => {
     setShowSceneEditor(false)
   }, [])
 
-  const handleDeleteScene = (sceneId) => {
-    if (confirm('确定删除这个场景？此操作不可恢复。')) {
+  const handleDeleteScene = async (sceneId) => {
+    if (!confirm('确定删除这个场景？此操作不可恢复。')) return
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/scenes/${sceneId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('删除失败')
+      
       setScenes(prev => prev.filter(s => s.id !== sceneId))
       showNotification('场景已删除')
+    } catch (err) {
+      showNotification(err.message, 'error')
     }
   }
 
   // Agent CRUD
-  const handleAddAgent = (agentData) => {
-    setAgents(prev => [...prev, { ...agentData, id: `agent_${Date.now()}` }])
-    showNotification('Agent 已添加')
+  const handleAddAgent = async (agentData) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: agentData.name,
+          type: agentData.type,
+          description: agentData.description || '',
+          config: agentData.config || {}
+        })
+      })
+      
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || '添加失败')
+      }
+      
+      const saved = await res.json()
+      setAgents(prev => [saved, ...prev])
+      showNotification('Agent 已添加')
+    } catch (err) {
+      showNotification(err.message, 'error')
+    }
   }
 
-  const handleUpdateAgent = (agentData) => {
-    setAgents(prev => prev.map(a => a.id === agentData.id ? agentData : a))
-    showNotification('Agent 已更新')
+  const handleUpdateAgent = async (agentData) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/agents/${agentData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: agentData.name,
+          type: agentData.type,
+          description: agentData.description || '',
+          config: agentData.config || {}
+        })
+      })
+      
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || '更新失败')
+      }
+      
+      const saved = await res.json()
+      setAgents(prev => prev.map(a => a.id === saved.id ? saved : a))
+      showNotification('Agent 已更新')
+    } catch (err) {
+      showNotification(err.message, 'error')
+    }
   }
 
-  const handleDeleteAgent = (agentId) => {
-    if (confirm('确定删除这个 Agent？')) {
+  const handleDeleteAgent = async (agentId) => {
+    if (!confirm('确定删除这个 Agent？')) return
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/agents/${agentId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('删除失败')
+      
       setAgents(prev => prev.filter(a => a.id !== agentId))
       showNotification('Agent 已删除')
+    } catch (err) {
+      showNotification(err.message, 'error')
     }
   }
 
@@ -839,7 +949,12 @@ function App() {
       )}
 
       <main className="main-content">
-        {/* 首页 */}
+        {loading ? (
+          <div className="empty-state">
+            <div className="empty-icon">⏳</div>
+            <div className="empty-title">加载中...</div>
+          </div>
+        ) : (<>
         {currentView === 'home' && (
           <div className="animate-fadeIn">
             <div className="page-header">
@@ -943,6 +1058,7 @@ function App() {
 
         {/* 监控面板 */}
         {currentView === 'monitor' && <MonitorPanel />}
+        </>)}
       </main>
 
       {/* 场景编辑器弹窗 */}
