@@ -56,7 +56,7 @@ function Navigation({ currentView, onViewChange }) {
 }
 
 // 统计卡片
-function StatCard({ icon, label, value, trend, color }) {
+function StatCard({ icon, label, value, trend }) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -65,14 +65,16 @@ function StatCard({ icon, label, value, trend, color }) {
   }, [value])
 
   return (
-    <div className="glass-card p-5 flex items-center gap-4">
-      <div className="stat-icon">{icon}</div>
-      <div className="flex-1">
-        <div className="text-2xl font-bold text-gray-800">{count}</div>
+    <div className="glass-card p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="stat-icon text-xl">{icon}</div>
         <div className="text-sm text-gray-500">{label}</div>
       </div>
-      <div className="text-emerald-600 text-sm font-medium flex items-center gap-1">
-        <span>↑</span> {trend}%
+      <div className="flex items-end justify-between">
+        <div className="text-3xl font-bold text-gray-800">{count}</div>
+        <div className="text-emerald-600 text-sm font-medium flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full">
+          <span>↑</span> {trend}%
+        </div>
       </div>
     </div>
   )
