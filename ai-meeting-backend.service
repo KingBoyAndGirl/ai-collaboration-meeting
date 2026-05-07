@@ -1,0 +1,15 @@
+[Unit]
+Description=AI Meeting Backend Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/ai-collaboration-meeting/backend
+ExecStart=%h/ai-collaboration-meeting/backend/.venv/bin/python main.py
+Restart=always
+RestartSec=5
+Environment=HOST=0.0.0.0
+Environment=PORT=18602
+
+[Install]
+WantedBy=default.target
