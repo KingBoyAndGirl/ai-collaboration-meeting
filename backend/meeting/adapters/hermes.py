@@ -11,7 +11,7 @@ class HermesAdapter(BaseMeetingAgent):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key') or os.getenv('HERMES_API_KEY')
-        self.base_url = config.get('base_url', 'http://localhost:54321')  # Hermes 端口
+        self.base_url = config.get('base_url', 'http://localhost:8642')  # Hermes Gateway 端口
         self.model = config.get('model', 'default')
 
     async def speak(
